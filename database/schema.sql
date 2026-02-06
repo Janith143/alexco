@@ -535,7 +535,7 @@ CREATE TABLE IF NOT EXISTS certifications (
     issue_date DATE NOT NULL,
     expiry_date DATE,
     document_path VARCHAR(500),
-    is_expired BOOLEAN GENERATED ALWAYS AS (expiry_date < CURDATE()) STORED,
+    -- is_expired should be checked at query time: expiry_date < CURDATE()
     notes TEXT,
     FOREIGN KEY (employee_id) REFERENCES employees(id),
     INDEX idx_employee (employee_id),
