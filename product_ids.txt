@@ -1,0 +1,22 @@
+[
+  {
+    "id": "05acb67e-859c-47fe-8d1c-237470836a38",
+    "name": "MC4 Connector Pair"
+  },
+  {
+    "id": "0f79ef0b-e7cf-4d2d-ae06-a6da2ca9cd9e",
+    "name": "test productw"
+  },
+  {
+    "id": "15c15df8-e8c8-42ee-84f9-4b43581bd222",
+    "name": "Jinko Solar Tiger Neo 450W"
+  },
+  {
+    "id": "278266f1-7154-441d-82aa-cc9614ca774e",
+    "name": "DC Breaker 20A 500V"
+  },
+  {
+    "id": "38f54d02-9b4c-4ebd-ae29-d9eb62bd269c",
+    "name": "PV Cable 4mm (Black)"
+  }
+]

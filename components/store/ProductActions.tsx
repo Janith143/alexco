@@ -1,0 +1,135 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { ShoppingCart, Bolt } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useCart } from "@/hooks/use-cart";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+
+interface ProductActionsProps {
+    product: {
+        id: string;
+        name: string;
+        price: number;
+        image?: string;
+        stock: number;
+        variations?: Record<string, string[]>; // e.g. { Color: ['Red', 'Blue'] }
+    }
+}
+
+export default function ProductActions({ product }: ProductActionsProps) {
+    const { addItem } = useCart();
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
+    const [missingSelection, setMissingSelection] = useState<string | null>(null);
+
+    // Initialize default selections if needed, or leave empty to force user choice
+    // For now, let's force user choice if variations exist.
+
+    const handleSelect = (key: string, value: string) => {
+        setSelectedVariations(prev => ({ ...prev, [key]: value }));
+        if (missingSelection === key) setMissingSelection(null);
+    };
+
+    const validateSelections = () => {
+        if (!product.variations) return true;
+        for (const key of Object.keys(product.variations)) {
+            if (!selectedVariations[key]) {
+                setMissingSelection(key);
+                toast({
+                    title: `Please select a ${key}`,
+                    variant: "destructive",
+                    duration: 2000
+                });
+                return false;
+            }
+        }
+        return true;
+    };
+
+    const handleAddToCart = () => {
+        if (!validateSelections()) return;
+
+        addItem({
+            id: product.id,
+            productId: product.id,
+            name: product.name,
+            price: product.price,
+            quantity: 1,
+            image: product.image || "/placeholder.jpg",
+            variations: selectedVariations
+        });
+        toast({
+            title: "Added to Cart",
+            description: `${product.name} added to your cart.`
+        });
+    };
+
+    const handleBuyNow = () => {
+        if (!validateSelections()) return;
+
+        handleAddToCart(); // Adds and saves to local storage
+        router.push("/shop/checkout");
+    };
+
+    const hasVariations = product.variations && Object.keys(product.variations).length > 0;
+
+    return (
+        <div className="space-y-6">
+            {hasVariations && (
+                <div className="space-y-4 py-2">
+                    {Object.entries(product.variations!).map(([key, options]) => (
+                        <div key={key}>
+                            <h4 className="text-sm font-medium text-slate-900 mb-2">
+                                {key} {missingSelection === key && <span className="text-red-500">* Required</span>}
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                                {Array.isArray(options) && options.map((opt: string) => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => handleSelect(key, opt)}
+                                        className={cn(
+                                            "px-4 py-2 rounded-md border text-sm font-medium transition-all",
+                                            selectedVariations[key] === opt
+                                                ? "border-blue-600 bg-blue-50 text-blue-700 ring-1 ring-blue-600"
+                                                : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50",
+                                            missingSelection === key && !selectedVariations[key] && "border-red-300 bg-red-50"
+                                        )}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+                <Button
+                    size="lg"
+                    className="w-full text-lg h-14 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200"
+                    onClick={handleAddToCart}
+                    disabled={product.stock <= 0}
+                >
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    {product.stock <= 0 ? "Out of Stock" : "Add to Cart"}
+                </Button>
+                <Button
+                    size="lg"
+                    variant="outline"
+                    className="w-full text-lg h-14 border-slate-300"
+                    onClick={handleBuyNow}
+                    disabled={product.stock <= 0}
+                >
+                    <Bolt className="mr-2 h-5 w-5" />
+                    Buy Now
+                </Button>
+            </div>
+        </div>
+    );
+}
