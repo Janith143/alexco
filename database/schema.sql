@@ -48,6 +48,14 @@ CREATE TABLE IF NOT EXISTS inventory_ledger (
     INDEX idx_product_location (product_id, location_id)
 );
 
+CREATE TABLE IF NOT EXISTS delivery_rates (
+    id CHAR(36) PRIMARY KEY,
+    min_weight_g INT NOT NULL,
+    max_weight_g INT NOT NULL,
+    rate DECIMAL(10, 2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ==========================================
 -- 2. POS & SALES (Phase 2)
 -- ==========================================

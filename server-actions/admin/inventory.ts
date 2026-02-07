@@ -76,7 +76,8 @@ export async function getInventoryList(search?: string) {
     let sql = `
         SELECT 
             p.id, p.sku, p.name, p.category_path, p.price_retail, p.price_cost, p.price_sale,
-            p.weight_g, p.description, p.long_description, p.variations,
+            p.weight_g, p.description, p.long_description, p.variations, p.image, p.gallery,
+            p.specifications, p.whats_included, p.features,
             COALESCE(SUM(l.delta), 0) as current_stock
         FROM products p
         LEFT JOIN inventory_ledger l ON p.id = l.product_id

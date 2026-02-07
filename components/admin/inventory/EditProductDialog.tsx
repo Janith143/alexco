@@ -68,8 +68,25 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
             } catch (e) { setFeatures([]); }
 
             // Parse Gallery
+            // Parse Gallery
             try {
-                const g = product.gallery ? (typeof product.gallery === 'string' ? JSON.parse(product.gallery) : product.gallery) : [];
+                console.log("EditProductDialog - Raw Product:", product);
+                console.log("EditProductDialog - Raw Gallery:", product.gallery, "Type:", typeof product.gallery);
+
+                let g = [];
+                if (typeof product.gallery === 'string') {
+                    try {
+                        g = JSON.parse(product.gallery);
+                    } catch (e) {
+                        console.error("Failed to parse gallery string:", e);
+                        g = [];
+                    }
+                } else {
+                    g = product.gallery || [];
+                }
+
+                console.log("EditProductDialog - Parsed Gallery:", g);
+
                 if (Array.isArray(g) && g.length > 0) {
                     setGallery(g);
                 } else if (product.image) {
@@ -77,7 +94,10 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
                 } else {
                     setGallery([]);
                 }
-            } catch (e) { setGallery([]); }
+            } catch (e) {
+                console.error("Error setting gallery:", e);
+                setGallery([]);
+            }
         }
     }, [product]);
 
