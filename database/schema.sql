@@ -11,7 +11,15 @@ CREATE TABLE IF NOT EXISTS products (
     name VARCHAR(255) NOT NULL,
     category_path TEXT NOT NULL,
     price_retail DECIMAL(10, 2) NOT NULL,
+    price_cost DECIMAL(10, 2) DEFAULT 0,
+    price_sale DECIMAL(10, 2) DEFAULT 0,
     tax_code VARCHAR(20) NOT NULL, -- ENUM: SOLAR_EXEMPT, VAT_18
+    description TEXT,
+    long_description TEXT,
+    variations JSON,
+    image TEXT, -- Main product image URL
+    gallery JSON, -- Array of additional image URLs
+    weight_g INT DEFAULT 0,
     specifications JSON, -- Dynamic attributes
     whats_included JSON, -- Box contents
     features JSON, -- Key features list

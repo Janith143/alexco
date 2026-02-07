@@ -10,6 +10,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { createProduct } from "@/server-actions/admin/inventory";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 interface AddProductDialogProps {
     open: boolean;
@@ -24,6 +25,7 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
     const [specs, setSpecs] = useState<{ key: string, value: string }[]>([]);
     const [boxItems, setBoxItems] = useState<string[]>([]);
     const [features, setFeatures] = useState<string[]>([]);
+    const [gallery, setGallery] = useState<string[]>([]);
 
     const addSpec = () => setSpecs([...specs, { key: "", value: "" }]);
     const removeSpec = (index: number) => setSpecs(specs.filter((_, i) => i !== index));
@@ -76,17 +78,23 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
             weight_g: formData.get('weight_g'),
             specifications: JSON.stringify(specsObj),
             whats_included: JSON.stringify(boxItems.filter(i => i.trim())),
-            features: JSON.stringify(features.filter(f => f.trim()))
+            features: JSON.stringify(features.filter(f => f.trim())),
+            gallery: gallery
         };
 
-        const result = await createProduct(data);
+        try {
+            const result = await createProduct(data);
 
-        if (result.error) {
-            setError(result.error);
+            if (result.error) {
+                setError(result.error);
+            } else {
+                onSuccess();
+            }
+        } catch (error) {
+            console.error(error);
+            setError("An unexpected error occurred. Please try again.");
+        } finally {
             setLoading(false);
-        } else {
-            setLoading(false);
-            onSuccess();
         }
     }
 
@@ -102,6 +110,15 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
                             {error}
                         </div>
                     )}
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Product Images (First is Main)</label>
+                        <ImageUpload
+                            value={gallery}
+                            onChange={setGallery}
+                            onRemove={(url) => setGallery(gallery.filter(g => g !== url))}
+                        />
+                    </div>
 
                     <div className="grid grid-cols-2 gap-6">
                         {/* LEFT COLUMN: Basic Info */}

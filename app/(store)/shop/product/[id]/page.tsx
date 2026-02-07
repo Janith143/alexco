@@ -33,6 +33,7 @@ async function getProduct(id: string) {
         const features = data(row.features);
         const included = data(row.whats_included);
         const variations = data(row.variations);
+        const gallery = data(row.gallery);
 
         // Inventory check
         const inventory = await query(`
@@ -40,6 +41,14 @@ async function getProduct(id: string) {
     `, [id]) as any[];
 
         const stock = Number(inventory[0]?.stock || 0);
+
+        // Construct images array: Gallery > Image > Empty
+        let images: string[] = [];
+        if (Array.isArray(gallery) && gallery.length > 0) {
+            images = gallery;
+        } else if (row.image) {
+            images = [row.image];
+        }
 
         return {
             id: row.id,
@@ -58,7 +67,7 @@ async function getProduct(id: string) {
             variations,
             warranty_period: row.warranty_period,
             warranty_policy: row.warranty_policy,
-            image: row.image
+            images // Pass array of images
         };
     } catch (error) {
         console.error(error);
@@ -90,6 +99,8 @@ async function getRelatedProducts(category: string, excludeId: string) {
     }
 }
 
+import ProductGallery from "@/components/store/ProductGallery";
+
 export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const product = await getProduct(id);
@@ -104,20 +115,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <div className="container mx-auto px-4 py-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 {/* Gallery Section */}
-                <div className="space-y-4">
-                    <div className="aspect-square bg-white rounded-xl flex items-center justify-center border border-slate-200 shadow-sm overflow-hidden relative">
-                        {product.image ? (
-                            <Image
-                                src={product.image}
-                                alt={product.name}
-                                fill
-                                className="object-cover hover:scale-105 transition-transform duration-500"
-                            />
-                        ) : (
-                            <span className="text-8xl opacity-10">📦</span>
-                        )}
-                    </div>
-                </div>
+                <ProductGallery images={product.images} name={product.name} />
 
                 {/* Basic Info Section */}
                 <div className="space-y-6">

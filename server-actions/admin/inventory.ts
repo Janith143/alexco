@@ -99,7 +99,7 @@ export async function createProduct(data: any) {
     const {
         name, sku, price, category, initialStock, description, long_description,
         variations_raw, price_cost, price_sale, weight_g,
-        specifications, whats_included, features
+        specifications, whats_included, features, gallery
     } = data;
     const { v4: uuidv4 } = await import('uuid');
 
@@ -121,14 +121,17 @@ export async function createProduct(data: any) {
         }
     }
 
+    const galleryArray = Array.isArray(gallery) ? gallery : [];
+    const mainImage = galleryArray.length > 0 ? galleryArray[0] : null;
+
     try {
         // 1. Create Product
         await query(`
             INSERT INTO products (
                 id, sku, name, category_path, price_retail, price_cost, price_sale, tax_code, 
-                description, long_description, variations, specifications, whats_included, features, weight_g
+                description, long_description, variations, specifications, whats_included, features, gallery, image, weight_g
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'VAT_18', ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'VAT_18', ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             productId, sku, name, category, price,
             price_cost || 0,
@@ -139,6 +142,8 @@ export async function createProduct(data: any) {
             specifications || JSON.stringify({}),
             whats_included || JSON.stringify([]),
             features || JSON.stringify([]),
+            JSON.stringify(galleryArray),
+            mainImage,
             Number(weight_g) || 0
         ]);
 
@@ -225,7 +230,7 @@ export async function updateProduct(id: string, data: any) {
     const {
         name, sku, price, category, description, long_description,
         variations_raw, price_cost, price_sale, weight_g,
-        specifications, whats_included, features
+        specifications, whats_included, features, gallery
     } = data;
 
     // Parse variations string "Color=Red,Blue; Size=S,M" -> { "Color": ["Red", "Blue"], "Size": ["S", "M"] }
@@ -244,12 +249,15 @@ export async function updateProduct(id: string, data: any) {
         }
     }
 
+    const galleryArray = Array.isArray(gallery) ? gallery : [];
+    const mainImage = galleryArray.length > 0 ? galleryArray[0] : null;
+
     try {
         await query(`
             UPDATE products SET
                 sku = ?, name = ?, category_path = ?, price_retail = ?, price_cost = ?, price_sale = ?, 
                 description = ?, long_description = ?, variations = ?, weight_g = ?,
-                specifications = ?, whats_included = ?, features = ?
+                specifications = ?, whats_included = ?, features = ?, gallery = ?, image = ?
             WHERE id = ?
         `, [
             sku, name, category, price,
@@ -262,6 +270,8 @@ export async function updateProduct(id: string, data: any) {
             specifications || JSON.stringify({}),
             whats_included || JSON.stringify([]),
             features || JSON.stringify([]),
+            JSON.stringify(galleryArray),
+            mainImage,
             id
         ]);
 

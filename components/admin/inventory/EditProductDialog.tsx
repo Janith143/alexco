@@ -10,6 +10,7 @@ import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { updateProduct } from "@/server-actions/admin/inventory";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 interface EditProductDialogProps {
     product: any | null;
@@ -25,6 +26,7 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
     const [specs, setSpecs] = useState<{ key: string, value: string }[]>([]);
     const [boxItems, setBoxItems] = useState<string[]>([]);
     const [features, setFeatures] = useState<string[]>([]);
+    const [gallery, setGallery] = useState<string[]>([]);
 
     useEffect(() => {
         if (product) {
@@ -40,11 +42,22 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
                 setBoxItems(Array.isArray(b) ? b : []);
             } catch (e) { setBoxItems([]); }
 
-            // Parse Features
             try {
                 const f = typeof product.features === 'string' ? JSON.parse(product.features) : product.features || [];
                 setFeatures(Array.isArray(f) ? f : []);
             } catch (e) { setFeatures([]); }
+
+            // Parse Gallery
+            try {
+                const g = product.gallery ? (typeof product.gallery === 'string' ? JSON.parse(product.gallery) : product.gallery) : [];
+                if (Array.isArray(g) && g.length > 0) {
+                    setGallery(g);
+                } else if (product.image) {
+                    setGallery([product.image]);
+                } else {
+                    setGallery([]);
+                }
+            } catch (e) { setGallery([]); }
         }
     }, [product]);
 
@@ -114,17 +127,23 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
             weight_g: formData.get('weight_g'),
             specifications: JSON.stringify(specsObj),
             whats_included: JSON.stringify(boxItems.filter(i => i.trim())),
-            features: JSON.stringify(features.filter(f => f.trim()))
+            features: JSON.stringify(features.filter(f => f.trim())),
+            gallery: gallery
         };
 
-        const result = await updateProduct(product.id, data);
+        try {
+            const result = await updateProduct(product.id, data);
 
-        if (result.error) {
-            setError(result.error);
+            if (result.error) {
+                setError(result.error);
+            } else {
+                onSuccess();
+            }
+        } catch (error) {
+            console.error(error);
+            setError("An unexpected error occurred.");
+        } finally {
             setLoading(false);
-        } else {
-            setLoading(false);
-            onSuccess();
         }
     }
 
@@ -142,6 +161,15 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
                             {error}
                         </div>
                     )}
+
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label className="block text-sm font-medium text-slate-700 mb-2">Product Images (First is Main)</label>
+                        <ImageUpload
+                            value={gallery}
+                            onChange={setGallery}
+                            onRemove={(url) => setGallery(gallery.filter(g => g !== url))}
+                        />
+                    </div>
 
                     <div className="grid grid-cols-2 gap-6">
                         {/* LEFT COLUMN: Basic Info */}
