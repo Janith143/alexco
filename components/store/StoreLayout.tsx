@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, Search, User, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +26,9 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
                             <Menu className="h-6 w-6" />
                         </Button>
                         <Link href="/" className="flex items-center gap-2">
-                            <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">A</div>
+                            <Image src="/logo.svg" alt="Alexco Electronics" width={40} height={40} className="h-10 w-auto object-contain" />
                             <span className="font-bold text-2xl tracking-tight text-slate-900 hidden sm:block">
-                                Alex<span className="text-blue-600">co</span>
+                                Alexco <span className="text-blue-600">Electronics</span>
                             </span>
                         </Link>
                     </div>
@@ -39,6 +40,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
 
                     {/* Actions (Right) */}
                     <div className="flex items-center gap-2 flex-shrink-0">
+                        {/*
                         <Button variant="ghost" size="icon" className="hidden md:flex flex-col gap-0.5 h-auto py-1 px-2 hover:bg-transparent hover:text-blue-600">
                             <User className="h-5 w-5" />
                             <span className="text-[10px] font-medium">Account</span>
@@ -47,6 +49,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
                             <Heart className="h-5 w-5" />
                             <span className="text-[10px] font-medium">Wishlist</span>
                         </Button>
+*/}
                         <div className="flex flex-col items-center justify-center px-2">
                             <CartSheet />
                             <span className="text-[10px] font-medium hidden md:block">Cart</span>
@@ -89,8 +92,8 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
                 <div className="container mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-5 gap-8">
                     <div className="col-span-2 md:col-span-1">
                         <Link href="/" className="flex items-center gap-2 mb-4">
-                            <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xl">A</div>
-                            <span className="font-bold text-2xl text-white">Alex<span className="text-blue-500">co</span></span>
+                            <Image src="/logo.svg" alt="Alexco Electronics" width={40} height={40} className="h-10 w-auto object-contain" />
+                            <span className="font-bold text-2xl text-white">Alexco <span className="text-blue-500">Electronics</span></span>
                         </Link>
                         <p className="text-sm text-slate-400 leading-relaxed">
                             Your trusted partner for solar energy solutions and electrical components in Sri Lanka.

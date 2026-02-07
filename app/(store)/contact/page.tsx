@@ -1,108 +1,103 @@
-
-export const metadata = {
-    title: "Contact Us | Alexco",
-    description: "Get in touch with Alexco for sales inquiries, support, or service requests.",
-};
+import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function ContactPage() {
     return (
-        <div className="max-w-6xl mx-auto py-12 px-4">
-            <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold text-slate-900">Contact Us</h1>
-                <p className="text-slate-500 mt-4">
-                    We're here to help with your solar and electrical needs.
-                </p>
-            </div>
+        <div className="container mx-auto px-4 py-12 max-w-6xl">
+            <h1 className="text-3xl font-bold mb-2 text-slate-900">Contact Us</h1>
+            <p className="text-slate-600 mb-10">We're here to help. Reach out to us for any inquiries or support.</p>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                {/* Contact Form */}
-                <div className="bg-white p-8 rounded-xl border shadow-sm">
-                    <h2 className="text-xl font-bold text-slate-900 mb-6">Send us a Message</h2>
-                    <form className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
-                                <input type="text" className="w-full px-4 py-2 border rounded-lg" placeholder="John" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
-                                <input type="text" className="w-full px-4 py-2 border rounded-lg" placeholder="Doe" />
-                            </div>
+            <div className="grid md:grid-cols-3 gap-12">
+                {/* Contact Information */}
+                <div className="md:col-span-1 space-y-8">
+                    <div className="flex gap-4">
+                        <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <MapPin className="h-5 w-5" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
-                            <input type="email" className="w-full px-4 py-2 border rounded-lg" placeholder="john@example.com" />
+                            <h3 className="font-semibold text-slate-900 mb-1">Visit Us</h3>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                123 Main Street,<br />
+                                Colombo 03, Sri Lanka
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Phone className="h-5 w-5" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-                            <input type="tel" className="w-full px-4 py-2 border rounded-lg" placeholder="+94 77 123 4567" />
+                            <h3 className="font-semibold text-slate-900 mb-1">Call Us</h3>
+                            <p className="text-slate-600 text-sm">
+                                <a href="tel:+94112345678" className="hover:text-blue-600 transition-colors">+94 11 234 5678</a><br />
+                                <a href="tel:+94771234567" className="hover:text-blue-600 transition-colors">+94 77 123 4567</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Mail className="h-5 w-5" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Subject</label>
-                            <select className="w-full px-4 py-2 border rounded-lg">
-                                <option>Sales Inquiry</option>
-                                <option>Technical Support</option>
-                                <option>Service Request</option>
-                                <option>Warranty Claim</option>
-                                <option>Other</option>
-                            </select>
+                            <h3 className="font-semibold text-slate-900 mb-1">Email Us</h3>
+                            <p className="text-slate-600 text-sm">
+                                <a href="mailto:sales@alexco.lk" className="hover:text-blue-600 transition-colors">sales@alexco.lk</a><br />
+                                <a href="mailto:support@alexco.lk" className="hover:text-blue-600 transition-colors">support@alexco.lk</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <div className="h-10 w-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <Clock className="h-5 w-5" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
-                            <textarea rows={4} className="w-full px-4 py-2 border rounded-lg" placeholder="How can we help you?"></textarea>
+                            <h3 className="font-semibold text-slate-900 mb-1">Opening Hours</h3>
+                            <p className="text-slate-600 text-sm">
+                                Mon - Fri: 8:30 AM - 5:30 PM<br />
+                                Sat: 9:00 AM - 2:00 PM<br />
+                                Sun: Closed
+                            </p>
                         </div>
-                        <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                            Send Message
-                        </button>
-                    </form>
+                    </div>
                 </div>
 
-                {/* Contact Info */}
-                <div className="space-y-6">
-                    <div className="bg-slate-900 text-white p-8 rounded-xl">
-                        <h2 className="text-xl font-bold mb-6">Get in Touch</h2>
-                        <div className="space-y-4">
-                            <div className="flex items-start gap-4">
-                                <div className="text-2xl">📍</div>
-                                <div>
-                                    <div className="font-medium">Address</div>
-                                    <div className="text-slate-300 text-sm">123 Main Street, Colombo 03, Sri Lanka</div>
-                                </div>
+                {/* Contact Form */}
+                <div className="md:col-span-2 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+                    <h2 className="text-xl font-bold text-slate-900 mb-6">Send us a Message</h2>
+                    <form className="space-y-6">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700">First Name</label>
+                                <Input placeholder="John" />
                             </div>
-                            <div className="flex items-start gap-4">
-                                <div className="text-2xl">📞</div>
-                                <div>
-                                    <div className="font-medium">Phone</div>
-                                    <div className="text-slate-300 text-sm">+94 11 234 5678</div>
-                                    <div className="text-slate-300 text-sm">+94 77 987 6543</div>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-4">
-                                <div className="text-2xl">✉️</div>
-                                <div>
-                                    <div className="font-medium">Email</div>
-                                    <div className="text-slate-300 text-sm">sales@alexco.lk</div>
-                                    <div className="text-slate-300 text-sm">support@alexco.lk</div>
-                                </div>
-                            </div>
-                            <div className="flex items-start gap-4">
-                                <div className="text-2xl">🕐</div>
-                                <div>
-                                    <div className="font-medium">Business Hours</div>
-                                    <div className="text-slate-300 text-sm">Mon - Fri: 8:30 AM - 5:30 PM</div>
-                                    <div className="text-slate-300 text-sm">Saturday: 9:00 AM - 1:00 PM</div>
-                                </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-slate-700">Last Name</label>
+                                <Input placeholder="Doe" />
                             </div>
                         </div>
-                    </div>
 
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-xl">
-                        <h3 className="font-bold text-lg mb-2">Need Urgent Support?</h3>
-                        <p className="text-blue-100 text-sm mb-4">
-                            For emergency repairs and urgent technical issues, call our 24/7 hotline.
-                        </p>
-                        <div className="text-2xl font-bold">+94 77 ALEXCO</div>
-                    </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700">Email Address</label>
+                            <Input type="email" placeholder="john@example.com" />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700">Subject</label>
+                            <Input placeholder="Inquiry about solar systems..." />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-slate-700">Message</label>
+                            <Textarea placeholder="How can we help you?" className="min-h-[150px]" />
+                        </div>
+
+                        <Button type="submit" className="w-full md:w-auto bg-blue-600 hover:bg-blue-700">Send Message</Button>
+                    </form>
                 </div>
             </div>
         </div>

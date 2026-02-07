@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 
 const slides = [
     {
@@ -11,6 +12,7 @@ const slides = [
         title: "Next Gen Electronics",
         subtitle: "Experience the future with our latest arrivals in smart home tech.",
         cta: "Shop Now",
+        link: "/shop?category=Smart%20Home",
         color: "bg-blue-600"
     },
     {
@@ -19,6 +21,7 @@ const slides = [
         title: "Flagship Smartphones",
         subtitle: "Unbeatable prices on the newest models from top brands.",
         cta: "View Offers",
+        link: "/shop?category=Mobile",
         color: "bg-purple-600"
     },
     {
@@ -27,6 +30,7 @@ const slides = [
         title: "Professional Computing",
         subtitle: "Power your workflow with high-performance workstations.",
         cta: "Explore",
+        link: "/shop?category=Computers",
         color: "bg-slate-900"
     }
 ];
@@ -41,8 +45,11 @@ export default function HeroSlider() {
         return () => clearInterval(timer);
     }, []);
 
+    const nextSlide = () => setCurrent((prev) => (prev + 1) % slides.length);
+    const prevSlide = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
+
     return (
-        <div className="relative h-[400px] md:h-[500px] w-full overflow-hidden bg-slate-900">
+        <div className="relative h-[400px] md:h-[500px] w-full overflow-hidden bg-slate-900 group">
             {slides.map((slide, index) => (
                 <div
                     key={slide.id}
@@ -65,13 +72,31 @@ export default function HeroSlider() {
                             <p className="text-lg md:text-xl text-slate-200">
                                 {slide.subtitle}
                             </p>
-                            <Button size="lg" className={`${slide.color} border-none text-white hover:opacity-90 h-12 px-8 text-lg rounded-full`}>
-                                {slide.cta} <ChevronRight className="ml-2 h-5 w-5" />
-                            </Button>
+                            <Link href={slide.link}>
+                                <Button size="lg" className={`${slide.color} border-none text-white hover:opacity-90 h-12 px-8 text-lg rounded-full`}>
+                                    {slide.cta} <ChevronRight className="ml-2 h-5 w-5" />
+                                </Button>
+                            </Link>
                         </div>
                     </div>
                 </div>
             ))}
+
+            {/* Navigation Arrows */}
+            <button
+                onClick={prevSlide}
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                aria-label="Previous Slide"
+            >
+                <ChevronLeft className="h-8 w-8" />
+            </button>
+            <button
+                onClick={nextSlide}
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                aria-label="Next Slide"
+            >
+                <ChevronRight className="h-8 w-8" />
+            </button>
 
             {/* Indicators */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
@@ -81,9 +106,11 @@ export default function HeroSlider() {
                         onClick={() => setCurrent(idx)}
                         className={`h-2.5 rounded-full transition-all ${idx === current ? "w-8 bg-blue-500" : "w-2.5 bg-white/50 hover:bg-white"
                             }`}
+                        aria-label={`Go to slide ${idx + 1}`}
                     />
                 ))}
             </div>
+
         </div>
     );
 }
