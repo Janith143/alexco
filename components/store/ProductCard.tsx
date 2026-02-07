@@ -57,6 +57,11 @@ export default function ProductCard({ product }: { product: ProductProps }) {
 
     return (
         <Card className="relative overflow-hidden group h-full flex flex-col border-0 shadow-sm hover:shadow-xl transition-all duration-300 bg-white rounded-xl">
+            {/* Full Card Link Overlay */}
+            <Link href={`/shop/product/${product.id}`} className="absolute inset-0 z-10" prefetch={false}>
+                <span className="sr-only">View {product.name}</span>
+            </Link>
+
             {/* Image Area */}
             <div className="relative aspect-square bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
                 {product.image ? (
@@ -73,7 +78,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
                 )}
 
                 {/* Badges */}
-                <div className="absolute top-2 left-2 flex flex-col gap-1">
+                <div className="absolute top-2 left-2 flex flex-col gap-1 z-20">
                     {discount > 0 && (
                         <Badge className="bg-red-500 hover:bg-red-500 text-white text-[10px] font-bold px-2">
                             -{discount}%
@@ -87,17 +92,17 @@ export default function ProductCard({ product }: { product: ProductProps }) {
                 </div>
 
                 {/* Hover Overlay */}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2">
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-20 pointer-events-none">
                     <Button
                         size="icon"
                         variant="secondary"
-                        className="h-10 w-10 rounded-full bg-white hover:bg-blue-600 hover:text-white transition-colors shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"
+                        className="h-10 w-10 rounded-full bg-white hover:bg-blue-600 hover:text-white transition-colors shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 pointer-events-auto"
                         onClick={handleAddToCart}
                         disabled={isOutOfStock}
                     >
                         <ShoppingCart className="h-4 w-4" />
                     </Button>
-                    <Link href={`/shop/product/${product.id}`}>
+                    <Link href={`/shop/product/${product.id}`} className="pointer-events-auto">
                         <Button
                             size="icon"
                             variant="secondary"
@@ -110,17 +115,17 @@ export default function ProductCard({ product }: { product: ProductProps }) {
             </div>
 
             {/* Content */}
-            <CardContent className="p-4 flex-1 flex flex-col">
+            <CardContent className="p-4 flex-1 flex flex-col pointer-events-none">
                 {product.category && (
                     <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">
                         {product.category}
                     </div>
                 )}
-                <Link href={`/shop/product/${product.id}`} className="block">
+                <div className="block">
                     <h3 className="font-semibold text-slate-800 leading-tight line-clamp-2 group-hover:text-blue-600 transition-colors">
                         {product.name}
                     </h3>
-                </Link>
+                </div>
 
                 {/* Spec Tags */}
                 {product.specs && Object.keys(product.specs).length > 0 && (
@@ -149,7 +154,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
             </CardContent>
 
             {/* Quick Add Button (Mobile Friendly) */}
-            <div className="p-4 pt-0 lg:hidden">
+            <div className="p-4 pt-0 lg:hidden relative z-20">
                 <Button
                     className="w-full"
                     size="sm"

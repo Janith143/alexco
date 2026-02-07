@@ -96,7 +96,11 @@ export async function getInventoryList(search?: string) {
 }
 
 export async function createProduct(data: any) {
-    const { name, sku, price, category, initialStock, description, long_description, variations_raw, price_cost, price_sale, weight_g } = data;
+    const {
+        name, sku, price, category, initialStock, description, long_description,
+        variations_raw, price_cost, price_sale, weight_g,
+        specifications, whats_included, features
+    } = data;
     const { v4: uuidv4 } = await import('uuid');
 
     const productId = uuidv4();
@@ -122,9 +126,9 @@ export async function createProduct(data: any) {
         await query(`
             INSERT INTO products (
                 id, sku, name, category_path, price_retail, price_cost, price_sale, tax_code, 
-                description, long_description, variations, specifications, weight_g
+                description, long_description, variations, specifications, whats_included, features, weight_g
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'VAT_18', ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'VAT_18', ?, ?, ?, ?, ?, ?, ?)
         `, [
             productId, sku, name, category, price,
             price_cost || 0,
@@ -132,7 +136,9 @@ export async function createProduct(data: any) {
             description || '',
             long_description || '',
             JSON.stringify(variations),
-            JSON.stringify({}), // Empty specs for now
+            specifications || JSON.stringify({}),
+            whats_included || JSON.stringify([]),
+            features || JSON.stringify([]),
             Number(weight_g) || 0
         ]);
 
@@ -216,7 +222,11 @@ export async function deleteProduct(productId: string) {
 }
 
 export async function updateProduct(id: string, data: any) {
-    const { name, sku, price, category, description, long_description, variations_raw, price_cost, price_sale, weight_g } = data;
+    const {
+        name, sku, price, category, description, long_description,
+        variations_raw, price_cost, price_sale, weight_g,
+        specifications, whats_included, features
+    } = data;
 
     // Parse variations string "Color=Red,Blue; Size=S,M" -> { "Color": ["Red", "Blue"], "Size": ["S", "M"] }
     let variations = {};
@@ -238,7 +248,8 @@ export async function updateProduct(id: string, data: any) {
         await query(`
             UPDATE products SET
                 sku = ?, name = ?, category_path = ?, price_retail = ?, price_cost = ?, price_sale = ?, 
-                description = ?, long_description = ?, variations = ?, weight_g = ?
+                description = ?, long_description = ?, variations = ?, weight_g = ?,
+                specifications = ?, whats_included = ?, features = ?
             WHERE id = ?
         `, [
             sku, name, category, price,
@@ -248,6 +259,9 @@ export async function updateProduct(id: string, data: any) {
             long_description || '',
             JSON.stringify(variations),
             Number(weight_g) || 0,
+            specifications || JSON.stringify({}),
+            whats_included || JSON.stringify([]),
+            features || JSON.stringify([]),
             id
         ]);
 

@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS products (
     price_retail DECIMAL(10, 2) NOT NULL,
     tax_code VARCHAR(20) NOT NULL, -- ENUM: SOLAR_EXEMPT, VAT_18
     specifications JSON, -- Dynamic attributes
+    whats_included JSON, -- Box contents
+    features JSON, -- Key features list
     inventory_strategy VARCHAR(20) DEFAULT 'FIFO', 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
