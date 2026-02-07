@@ -16,21 +16,36 @@ export function Toaster() {
 
     return (
         <ToastProvider>
-            {toasts.map(function ({ id, title, description, action, ...props }: any) {
-                return (
-                    <Toast key={id} {...props}>
-                        <div className="grid gap-1">
-                            {title && <ToastTitle>{title}</ToastTitle>}
-                            {description && (
-                                <ToastDescription>{description}</ToastDescription>
-                            )}
-                        </div>
-                        {action}
-                        <ToastClose onClick={() => dismiss(id)} />
-                    </Toast>
-                )
+            {toasts.map(function (toastProps: any) {
+                return <ToastWithTimer key={toastProps.id} {...toastProps} dismiss={dismiss} />
             })}
             <ToastViewport />
         </ToastProvider>
+    )
+}
+
+function ToastWithTimer({ id, title, description, action, duration, dismiss, ...props }: any) {
+    useEffect(() => {
+        const d = duration || 3000; // Default 3 seconds
+        if (d === Infinity) return;
+
+        const timer = setTimeout(() => {
+            dismiss(id);
+        }, d);
+
+        return () => clearTimeout(timer);
+    }, [id, duration, dismiss]);
+
+    return (
+        <Toast {...props}>
+            <div className="grid gap-1">
+                {title && <ToastTitle>{title}</ToastTitle>}
+                {description && (
+                    <ToastDescription>{description}</ToastDescription>
+                )}
+            </div>
+            {action}
+            <ToastClose onClick={() => dismiss(id)} />
+        </Toast>
     )
 }

@@ -100,13 +100,6 @@ export function useToast() {
                 },
             })
 
-            const duration = props.duration || 3000;
-            if (duration !== Infinity) {
-                setTimeout(() => {
-                    dismiss();
-                }, duration);
-            }
-
             return {
                 id: id,
                 dismiss,
