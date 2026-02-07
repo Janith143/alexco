@@ -83,6 +83,7 @@ export default function ImageUpload({
                             className="object-cover"
                             alt="Product Image"
                             src={url}
+                            unoptimized={url.startsWith('/uploads')}
                         />
                     </div>
                 ))}
