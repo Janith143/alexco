@@ -322,7 +322,15 @@ export default function CheckoutPage() {
                                     {items.map((item, idx) => (
                                         <div key={idx} className="flex gap-3 text-sm border-b pb-3 last:border-0 last:pb-0">
                                             <div className="relative w-12 h-12 bg-slate-100 rounded flex-shrink-0 overflow-hidden">
-                                                {item.image && <Image src={item.image} alt={item.name} fill className="object-cover" />}
+                                                {item.image && (
+                                                    <Image
+                                                        src={item.image}
+                                                        alt={item.name}
+                                                        fill
+                                                        className="object-cover"
+                                                        unoptimized={item.image.startsWith('/uploads')}
+                                                    />
+                                                )}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex justify-between">

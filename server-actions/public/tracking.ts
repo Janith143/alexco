@@ -44,12 +44,22 @@ export async function trackOrder(orderNumber: string, contact: string) {
     }
 
     // 2. Get Items
-    const items = await query(`
-        SELECT si.quantity, p.name, p.image
+    const rows = await query(`
+        SELECT si.quantity, p.name, p.image, p.gallery
         FROM sales_items si
         LEFT JOIN products p ON si.product_id = p.id
         WHERE si.order_id = ?
     `, [order.id]) as any[];
+
+    const items = rows.map(r => {
+        const gallery = typeof r.gallery === 'string' ? JSON.parse(r.gallery) : r.gallery;
+        const mainImage = (Array.isArray(gallery) && gallery.length > 0) ? gallery[0] : r.image;
+        return {
+            quantity: r.quantity,
+            name: r.name,
+            image: mainImage
+        };
+    });
 
     return { success: true, order, items };
 }

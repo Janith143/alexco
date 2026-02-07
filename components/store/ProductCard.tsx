@@ -70,6 +70,7 @@ export default function ProductCard({ product }: { product: ProductProps }) {
                         alt={product.name}
                         fill
                         className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        unoptimized={product.image.startsWith('/uploads')}
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center">

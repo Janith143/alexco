@@ -29,6 +29,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
                     alt={name}
                     fill
                     className="object-contain p-4 group-hover:scale-105 transition-transform duration-500"
+                    unoptimized={selectedImage.startsWith('/uploads')}
                 />
             </div>
 
@@ -49,6 +50,7 @@ export default function ProductGallery({ images, name }: ProductGalleryProps) {
                                 alt={`${name} view ${idx + 1}`}
                                 fill
                                 className="object-cover"
+                                unoptimized={img.startsWith('/uploads')}
                             />
                         </button>
                     ))}

@@ -53,8 +53,17 @@ export default function CartSheet() {
                             {items.map((item, idx) => (
                                 <div key={item.id + '-' + idx} className="flex gap-4">
                                     <div className="h-16 w-16 bg-slate-100 rounded-md relative overflow-hidden flex-shrink-0">
-                                        {/* Placeholder */}
-                                        <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-400">IMG</div>
+                                        {item.image ? (
+                                            <Image
+                                                src={item.image}
+                                                alt={item.name}
+                                                fill
+                                                className="object-cover"
+                                                unoptimized={item.image.startsWith('/uploads')}
+                                            />
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center text-xs text-slate-400">No Image</div>
+                                        )}
                                     </div>
                                     <div className="flex-1">
                                         <h4 className="font-medium text-sm line-clamp-2">{item.name}</h4>

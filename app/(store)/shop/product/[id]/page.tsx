@@ -78,21 +78,26 @@ async function getProduct(id: string) {
 async function getRelatedProducts(category: string, excludeId: string) {
     try {
         const rows = await query(`
-            SELECT id, name, price_retail, price_sale, image, category_path 
+            SELECT id, name, price_retail, price_sale, image, gallery, category_path 
             FROM products 
             WHERE category_path = ? AND id != ? AND inventory_strategy != 'DISCONTINUED'
             ORDER BY RAND()
             LIMIT 4
         `, [category, excludeId]) as any[];
 
-        return rows.map(r => ({
-            id: r.id,
-            name: r.name,
-            price: Number(r.price_sale) > 0 ? Number(r.price_sale) : Number(r.price_retail),
-            price_retail: Number(r.price_retail),
-            category: r.category_path,
-            image: r.image
-        }));
+        return rows.map(r => {
+            const gallery = typeof r.gallery === 'string' ? JSON.parse(r.gallery) : r.gallery;
+            const mainImage = (Array.isArray(gallery) && gallery.length > 0) ? gallery[0] : r.image;
+
+            return {
+                id: r.id,
+                name: r.name,
+                price: Number(r.price_sale) > 0 ? Number(r.price_sale) : Number(r.price_retail),
+                price_retail: Number(r.price_retail),
+                category: r.category_path,
+                image: mainImage
+            };
+        });
     } catch (e) {
         console.error(e);
         return [];
@@ -164,6 +169,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                         id: product.id,
                         name: product.name,
                         price: product.price_sale > 0 ? product.price_sale : product.price_retail,
+                        image: product.images[0],
                         stock: product.stock,
                         variations: product.variations
                     }} />

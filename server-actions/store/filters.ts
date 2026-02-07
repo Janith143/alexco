@@ -90,7 +90,7 @@ export async function getFilteredProducts(filters: {
         const products = await query(`
             SELECT 
                 p.id, p.name, p.sku, p.description, p.category_path,
-                p.price_retail, p.price_sale, p.image,
+                p.price_retail, p.price_sale, p.image, p.gallery,
                 COALESCE(SUM(l.delta), 0) as stock
             FROM products p
             LEFT JOIN inventory_ledger l ON p.id = l.product_id
@@ -101,18 +101,23 @@ export async function getFilteredProducts(filters: {
         `, [...params, limit.toString(), offset.toString()]) as any[];
 
         return {
-            products: products.map(p => ({
-                id: p.id,
-                name: p.name,
-                sku: p.sku,
-                description: p.description,
-                category: p.category_path,
-                price: Number(p.price_sale) > 0 ? Number(p.price_sale) : Number(p.price_retail),
-                price_retail: Number(p.price_retail),
-                price_sale: Number(p.price_sale),
-                image: p.image,
-                stock: Number(p.stock)
-            })),
+            products: products.map(p => {
+                const gallery = typeof p.gallery === 'string' ? JSON.parse(p.gallery) : p.gallery;
+                const mainImage = (Array.isArray(gallery) && gallery.length > 0) ? gallery[0] : p.image;
+
+                return {
+                    id: p.id,
+                    name: p.name,
+                    sku: p.sku,
+                    description: p.description,
+                    category: p.category_path,
+                    price: Number(p.price_sale) > 0 ? Number(p.price_sale) : Number(p.price_retail),
+                    price_retail: Number(p.price_retail),
+                    price_sale: Number(p.price_sale),
+                    image: mainImage,
+                    stock: Number(p.stock)
+                };
+            }),
             total,
             page,
             totalPages: Math.ceil(total / limit)
