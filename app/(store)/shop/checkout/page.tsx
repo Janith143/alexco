@@ -88,6 +88,15 @@ export default function CheckoutPage() {
             return;
         }
 
+        if (!formData.name || !formData.phone || !formData.address || !formData.city) {
+            toast({
+                title: "Missing Details",
+                description: "Please fill in all required fields (Name, Phone, Address, City).",
+                variant: "destructive"
+            });
+            return;
+        }
+
         if (paymentMethod === 'bank_transfer' && !receiptFile) {
             toast({ title: "Please upload payment receipt", variant: "destructive" });
             return;
