@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, AlertTriangle, Ticket, Users, Store, LogOut, Shield, CreditCard, FileText, Calendar, ShoppingBag, Settings } from "lucide-react";
+import { LayoutDashboard, AlertTriangle, Ticket, Users, Store, LogOut, Shield, CreditCard, FileText, Calendar, ShoppingBag, Settings, Folder } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -56,6 +56,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         { href: "/paths/admin/reports", label: "Reports Hub", icon: FileText, roles: ['super_user', 'admin', 'manager', 'accountant'] },
 
         { href: "/paths/admin/settings/delivery", label: "Settings", icon: Settings, roles: ['super_user', 'admin'] },
+        { href: "/paths/admin/categories", label: "Categories", icon: Folder, roles: ['super_user', 'admin', 'manager'] },
 
         { href: "/paths/admin/users", label: "User Management", icon: Shield, roles: ['super_user', 'admin'] },
         { href: "/paths/admin/users/roles", label: "Roles", icon: Shield, roles: ['super_user', 'admin'] },
@@ -81,6 +82,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             if (item.label === 'Settings') return user.permissions.includes('admin.manage');
             if (item.label === 'User Management') return user.permissions.includes('users.manage');
             if (item.label === 'Roles') return user.permissions.includes('users.manage');
+            if (item.label === 'Categories') return user.permissions.includes('inventory.view') || user.permissions.includes('admin.manage');
 
             return false;
         })

@@ -29,3 +29,27 @@ export async function trackTicket(ticketNumber: string, phone: string) {
 
     return { success: true, ticket, history };
 }
+
+export async function trackOrder(orderNumber: string, contact: string) {
+    // 1. Find Order
+    // Match order_number and (email OR phone)
+    const [order] = await query(`
+        SELECT id, order_number, customer_name, delivery_status, total_amount, created_at, shipping_address
+        FROM sales_orders
+        WHERE order_number = ? AND (customer_email = ? OR customer_phone LIKE ? OR customer_phone = ?)
+    `, [orderNumber, contact, `%${contact}`, contact]) as any[];
+
+    if (!order) {
+        return { success: false, message: "Order not found or contact details mismatch." };
+    }
+
+    // 2. Get Items
+    const items = await query(`
+        SELECT si.quantity, p.name, p.image
+        FROM sales_items si
+        LEFT JOIN products p ON si.product_id = p.id
+        WHERE si.order_id = ?
+    `, [order.id]) as any[];
+
+    return { success: true, order, items };
+}

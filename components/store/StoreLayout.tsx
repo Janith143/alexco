@@ -1,16 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, Search, User, Heart } from "lucide-react";
+import { Menu, Search, User, Heart, X, Home, ShoppingBag, Wrench, MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+
 import CartSheet from "./CartSheet";
 import TopBar from "./TopBar";
 import MegaMenu from "./MegaMenu";
 import SearchBar from "./SearchBar";
 
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const mobileNavLinks = [
+        { href: "/", label: "Home", icon: Home },
+        { href: "/shop", label: "All Products", icon: ShoppingBag },
+        { href: "/track-order", label: "Track Order", icon: Search },
+        { href: "/about", label: "About Us", icon: Wrench },
+        { href: "/contact", label: "Contact", icon: Phone },
+    ];
+
     return (
         <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
             {/* 1. Top Utility Bar */}
@@ -22,11 +34,41 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
 
                     {/* Mobile Menu & Logo */}
                     <div className="flex items-center gap-4 flex-shrink-0">
-                        <Button variant="ghost" size="icon" className="md:hidden">
-                            <Menu className="h-6 w-6" />
-                        </Button>
+                        {/* Mobile Menu Sheet */}
+                        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+                            <SheetTrigger asChild>
+                                <Button variant="ghost" size="icon" className="md:hidden">
+                                    <Menu className="h-6 w-6" />
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="w-[280px] p-0">
+                                <SheetHeader className="p-4 border-b">
+                                    <SheetTitle className="flex items-center gap-2">
+                                        <Image src="/logo.png" alt="Alexco" width={32} height={32} className="h-8 w-auto" />
+                                        <span>Alexco Electronics</span>
+                                    </SheetTitle>
+                                </SheetHeader>
+                                <nav className="flex flex-col p-4">
+                                    {mobileNavLinks.map((link) => (
+                                        <SheetClose asChild key={link.href}>
+                                            <Link
+                                                href={link.href}
+                                                className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-slate-100 transition-colors text-slate-700"
+                                            >
+                                                <link.icon className="h-5 w-5 text-blue-600" />
+                                                <span className="font-medium">{link.label}</span>
+                                            </Link>
+                                        </SheetClose>
+                                    ))}
+                                </nav>
+                                <div className="border-t p-4 mt-auto">
+                                    <p className="text-xs text-slate-500 text-center">© 2026 Alexco Technologies</p>
+                                </div>
+                            </SheetContent>
+                        </Sheet>
+
                         <Link href="/" className="flex items-center gap-2">
-                            <Image src="/logo.svg" alt="Alexco Electronics" width={40} height={40} className="h-10 w-auto object-contain" />
+                            <Image src="/logo.png" alt="Alexco Electronics" width={40} height={40} className="h-10 w-auto object-contain" />
                             <span className="font-bold text-2xl tracking-tight text-slate-900 hidden sm:block">
                                 Alexco <span className="text-blue-600">Electronics</span>
                             </span>
@@ -69,30 +111,13 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
             {/* Footer */}
             <footer className="bg-slate-900 text-slate-300">
                 {/* Newsletter Section */}
-                <div className="border-b border-slate-800">
-                    <div className="container mx-auto px-4 py-10">
-                        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="text-center md:text-left">
-                                <h3 className="text-xl font-bold text-white mb-1">Stay Updated</h3>
-                                <p className="text-slate-400 text-sm">Subscribe for exclusive deals and latest product updates.</p>
-                            </div>
-                            <div className="flex gap-2 w-full md:w-auto max-w-md">
-                                <Input
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 flex-1"
-                                />
-                                <Button className="bg-blue-600 hover:bg-blue-700 px-6">Subscribe</Button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
 
                 {/* Main Footer Content */}
                 <div className="container mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-5 gap-8">
                     <div className="col-span-2 md:col-span-1">
                         <Link href="/" className="flex items-center gap-2 mb-4">
-                            <Image src="/logo.svg" alt="Alexco Electronics" width={40} height={40} className="h-10 w-auto object-contain" />
+                            <Image src="/logo.png" alt="Alexco Electronics" width={40} height={40} className="h-10 w-auto object-contain" />
                             <span className="font-bold text-2xl text-white">Alexco <span className="text-blue-500">Electronics</span></span>
                         </Link>
                         <p className="text-sm text-slate-400 leading-relaxed">

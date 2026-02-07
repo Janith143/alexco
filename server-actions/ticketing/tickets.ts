@@ -56,16 +56,23 @@ export async function createJobTicket(data: TicketData) {
 }
 
 export async function updateTicketStatus(ticketId: string, newStatus: TicketStatus, customerPhone?: string) {
-    console.log(`Updating Ticket ${ticketId} to ${newStatus}`);
+    const { query } = await import('@/lib/db');
 
-    // SQL:
-    // await query(`UPDATE tickets SET status = $1 WHERE id = $2`, [newStatus, ticketId]);
+    // Update ticket status in database
+    await query(`UPDATE tickets SET status = ? WHERE id = ?`, [newStatus, ticketId]);
+
+    // Log status change in history
+    const histId = crypto.randomUUID();
+    await query(`
+        INSERT INTO ticket_history (id, ticket_id, action_type, description)
+        VALUES (?, ?, 'STATUS_CHANGE', ?)
+    `, [histId, ticketId, `Status changed to ${newStatus}`]);
 
     // Status-specific logic
     if (newStatus === 'READY' && customerPhone) {
         await mockSMSGateway(
             customerPhone,
-            `Alexco: Your device is ready for pickup.Shop open until 6 PM.`
+            `Alexco: Your device is ready for pickup. Shop open until 6 PM.`
         );
     }
 

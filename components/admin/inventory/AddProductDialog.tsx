@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+    Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
 } from "@/components/ui/dialog";
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
@@ -21,6 +21,26 @@ interface AddProductDialogProps {
 export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddProductDialogProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [categories, setCategories] = useState<{ id: string, name: string, slug: string, parent_id: string | null }[]>([]);
+
+    useEffect(() => {
+        if (open) {
+            import("@/server-actions/admin/categories").then(({ getCategories }) => {
+                getCategories(true).then((cats) => {
+                    // Flatten for select
+                    const flat: any[] = [];
+                    const traverse = (items: any[]) => {
+                        items.forEach(i => {
+                            flat.push(i);
+                            if (i.children) traverse(i.children);
+                        });
+                    };
+                    traverse(cats);
+                    setCategories(flat);
+                });
+            });
+        }
+    }, [open]);
 
     const [specs, setSpecs] = useState<{ key: string, value: string }[]>([]);
     const [boxItems, setBoxItems] = useState<string[]>([]);
@@ -103,6 +123,9 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
             <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Add New Product</DialogTitle>
+                    <DialogDescription>
+                        Fill in the details below to create a new product in the inventory.
+                    </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {error && (
@@ -139,10 +162,11 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
                                         <SelectValue placeholder="Select" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Solar">Solar</SelectItem>
-                                        <SelectItem value="Electrical">Electrical</SelectItem>
-                                        <SelectItem value="Smart Home">Smart Home</SelectItem>
-                                        <SelectItem value="Services">Services</SelectItem>
+                                        {categories.map((cat) => (
+                                            <SelectItem key={cat.id} value={cat.slug || cat.name}>
+                                                {cat.parent_id ? `— ${cat.name}` : cat.name}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>

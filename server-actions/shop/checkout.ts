@@ -44,6 +44,28 @@ export async function createOnlineOrder(formData: FormData) {
         const locationId = loc ? loc.id : null;
         if (!locationId) throw new Error("Store location not found");
 
+        // 2.5 STOCK VALIDATION - Check if all items have sufficient stock
+        for (const item of items) {
+            const productId = item.productId || item.id;
+            const requestedQty = item.quantity;
+
+            // Calculate current stock from inventory_ledger
+            const [stockResult] = await query(`
+                SELECT COALESCE(SUM(delta), 0) as current_stock
+                FROM inventory_ledger
+                WHERE product_id = ? AND location_id = ?
+            `, [productId, locationId]) as any[];
+
+            const currentStock = Number(stockResult?.current_stock) || 0;
+
+            if (currentStock < requestedQty) {
+                return {
+                    success: false,
+                    error: `Insufficient stock for "${item.name}". Available: ${currentStock}, Requested: ${requestedQty}`
+                };
+            }
+        }
+
         // 3. Insert Order
         await query(`
             INSERT INTO sales_orders (

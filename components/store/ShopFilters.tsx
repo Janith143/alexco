@@ -10,7 +10,7 @@ import { ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ShopFiltersProps {
-    categories: string[];
+    categories: { name: string; slug: string }[];
     priceRange: { min: number; max: number };
     selectedCategory?: string;
     selectedPriceRange?: [number, number];
@@ -47,8 +47,8 @@ export default function ShopFilters({
         setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
     };
 
-    const handleCategoryChange = (cat: string) => {
-        onFilterChange({ category: selectedCategory === cat ? undefined : cat });
+    const handleCategoryChange = (slug: string) => {
+        onFilterChange({ category: selectedCategory === slug ? undefined : slug });
     };
 
     const handlePriceApply = () => {
@@ -88,20 +88,20 @@ export default function ShopFilters({
                 {expandedSections.category && (
                     <div className="space-y-2 mt-2 max-h-[200px] overflow-y-auto">
                         {categories.map((cat) => (
-                            <div key={cat} className="flex items-center space-x-2">
+                            <div key={cat.slug} className="flex items-center space-x-2">
                                 <Checkbox
-                                    id={cat}
-                                    checked={selectedCategory === cat}
-                                    onCheckedChange={() => handleCategoryChange(cat)}
+                                    id={cat.slug}
+                                    checked={selectedCategory === cat.slug}
+                                    onCheckedChange={() => handleCategoryChange(cat.slug)}
                                 />
                                 <Label
-                                    htmlFor={cat}
+                                    htmlFor={cat.slug}
                                     className={cn(
                                         "text-sm cursor-pointer",
-                                        selectedCategory === cat && "font-semibold text-blue-600"
+                                        selectedCategory === cat.slug && "font-semibold text-blue-600"
                                     )}
                                 >
-                                    {cat}
+                                    {cat.name}
                                 </Label>
                             </div>
                         ))}

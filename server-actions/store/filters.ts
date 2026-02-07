@@ -4,13 +4,12 @@ import { query } from "@/lib/db";
 
 export async function getFilterOptions() {
     try {
-        // Get distinct categories
+        // Get active categories
         const categories = await query(`
-            SELECT DISTINCT category_path 
-            FROM products 
-            WHERE category_path IS NOT NULL AND category_path != '' 
-              AND inventory_strategy != 'DISCONTINUED'
-            ORDER BY category_path
+            SELECT slug, name 
+            FROM categories 
+            WHERE is_active = TRUE 
+            ORDER BY order_index ASC, name ASC
         `) as any[];
 
         // Get price range
@@ -23,7 +22,7 @@ export async function getFilterOptions() {
         `) as any[];
 
         return {
-            categories: categories.map(c => c.category_path).filter(Boolean),
+            categories: categories.map(c => ({ name: c.name, slug: c.slug })),
             priceRange: {
                 min: Number(priceRange?.min_price) || 0,
                 max: Number(priceRange?.max_price) || 100000

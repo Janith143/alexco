@@ -17,7 +17,7 @@ function ShopContent() {
     // State
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filterOptions, setFilterOptions] = useState<{ categories: string[]; priceRange: { min: number; max: number } }>({
+    const [filterOptions, setFilterOptions] = useState<{ categories: { name: string; slug: string }[]; priceRange: { min: number; max: number } }>({
         categories: [],
         priceRange: { min: 0, max: 100000 }
     });

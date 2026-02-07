@@ -100,6 +100,20 @@ export default function ContactPage() {
                     </form>
                 </div>
             </div>
+
+            {/* Map Section */}
+            <div className="mt-16 rounded-2xl overflow-hidden border border-slate-200 shadow-sm h-[400px] bg-slate-100 relative">
+                <iframe
+                    src="https://maps.google.com/maps?q=7.013340473175049,79.96552276611328&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Alexco Location"
+                ></iframe>
+            </div>
         </div>
     );
 }
