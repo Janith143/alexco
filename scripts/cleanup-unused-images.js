@@ -74,15 +74,16 @@ async function getFilesRecursively(dir) {
 }
 
 async function cleanup(dryRun = true) {
+    // These fallbacks are tuned for your VPS environment
     const config = {
         host: process.env.DB_HOST || '127.0.0.1',
-        user: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || 'Ican123ZXC',
+        user: process.env.DB_USER || 'alexco_user',
+        password: process.env.DB_PASSWORD || 'Ican123ZXC++',
         database: process.env.DB_NAME || 'alexco_db',
         port: Number(process.env.DB_PORT) || 3306
     };
 
-    console.log(`Connecting to database ${config.host}...`);
+    console.log(`Connecting to database ${config.user}@${config.host}...`);
     const connection = await mysql.createConnection(config);
 
     console.log(`Starting cleanup (${dryRun ? 'DRY RUN' : 'ACTUAL DELETE'})...`);
