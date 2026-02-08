@@ -31,8 +31,7 @@ async function cleanDatabase() {
             'employees',
             'products',
             'categories',
-            'delivery_rates',
-            'locations'
+            'delivery_rates'
         ];
 
         for (const table of tablesToClear) {

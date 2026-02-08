@@ -206,6 +206,20 @@ export async function deleteProduct(productId: string) {
             return { success: false, error: 'Cannot delete product with existing sales history. Set stock to 0 or archive it instead (Archiving not yet implemented).' };
         }
 
+        // Fetch product to get images before deletion
+        const [product] = await query(`SELECT image, gallery FROM products WHERE id = ?`, [productId]) as any[];
+
+        if (product) {
+            const { deleteUploadedFile, deleteUploadedFiles } = await import('@/lib/file-storage');
+            await deleteUploadedFile(product.image);
+            if (product.gallery) {
+                const gallery = typeof product.gallery === 'string' ? JSON.parse(product.gallery) : product.gallery;
+                if (Array.isArray(gallery)) {
+                    await deleteUploadedFiles(gallery);
+                }
+            }
+        }
+
         // Delete inventory ledger entries
         await query(`
             DELETE FROM inventory_ledger WHERE product_id = ?
@@ -254,6 +268,9 @@ export async function updateProduct(id: string, data: any) {
     const mainImage = galleryArray.length > 0 ? galleryArray[0] : null;
 
     try {
+        // Fetch current product to find removed images
+        const [oldProduct] = await query(`SELECT image, gallery FROM products WHERE id = ?`, [id]) as any[];
+
         await query(`
             UPDATE products SET
                 sku = ?, name = ?, category_path = ?, price_retail = ?, price_cost = ?, price_sale = ?, 
@@ -275,6 +292,25 @@ export async function updateProduct(id: string, data: any) {
             mainImage,
             id
         ]);
+
+        // Post-update cleanup: find images that were removed
+        if (oldProduct) {
+            const { deleteUploadedFile } = await import('@/lib/file-storage');
+
+            // Check main image
+            if (oldProduct.image && oldProduct.image !== mainImage) {
+                await deleteUploadedFile(oldProduct.image);
+            }
+
+            // Check gallery
+            const oldGallery = typeof oldProduct.gallery === 'string' ? JSON.parse(oldProduct.gallery) : (oldProduct.gallery || []);
+            if (Array.isArray(oldGallery)) {
+                const removedFromGallery = oldGallery.filter(img => !galleryArray.includes(img));
+                for (const img of removedFromGallery) {
+                    await deleteUploadedFile(img);
+                }
+            }
+        }
 
         const { revalidatePath } = await import('next/cache');
         revalidatePath('/paths/admin/inventory');

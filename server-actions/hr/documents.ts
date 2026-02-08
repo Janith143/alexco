@@ -51,3 +51,25 @@ export async function uploadEmployeeDocument(formData: FormData) {
 
     return { success: true };
 }
+
+// Delete employee document
+export async function deleteEmployeeDocument(documentId: string) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) return { error: 'Unauthorized' };
+
+    try {
+        // Fetch document to get file path
+        const [doc] = await query(`SELECT file_path FROM employee_documents WHERE id = ?`, [documentId]) as any[];
+
+        if (doc) {
+            const { deleteUploadedFile } = await import('@/lib/file-storage');
+            await deleteUploadedFile(doc.file_path);
+        }
+
+        await query(`DELETE FROM employee_documents WHERE id = ?`, [documentId]);
+        return { success: true };
+    } catch (e: any) {
+        console.error("Delete Document Error:", e);
+        return { error: 'Failed to delete document' };
+    }
+}
