@@ -13,6 +13,7 @@ export async function createOnlineOrder(formData: FormData) {
         const email = formData.get("email") as string;
         const address = formData.get("address") as string;
         const paymentMethod = formData.get("paymentMethod") as string;
+        const deliveryMethod = (formData.get("deliveryMethod") as string) || "delivery";
         const itemsStr = formData.get("items") as string;
         const total = parseFloat(formData.get("total") as string);
         const receiptFile = formData.get("receipt") as File | null;
@@ -66,16 +67,19 @@ export async function createOnlineOrder(formData: FormData) {
             }
         }
 
+        // Set delivery status based on delivery method
+        const deliveryStatus = deliveryMethod === 'pickup' ? 'PICKUP' : 'PENDING';
+
         // 3. Insert Order
         await query(`
             INSERT INTO sales_orders (
-                id, order_number, total_amount, status, payment_method, location_id, sync_status,
+                id, order_number, total_amount, status, payment_method, delivery_method, location_id, sync_status,
                 customer_name, customer_phone, customer_email, shipping_address, order_source, delivery_status, payment_proof, created_at
             )
-            VALUES (?, ?, ?, 'PENDING', ?, ?, 'SYNCED', ?, ?, ?, ?, 'ONLINE', 'PENDING', ?, NOW())
+            VALUES (?, ?, ?, 'PENDING', ?, ?, ?, 'SYNCED', ?, ?, ?, ?, 'ONLINE', ?, ?, NOW())
         `, [
-            orderId, orderNumber, total, paymentMethod, locationId,
-            name, phone, email, address, paymentProofUrl
+            orderId, orderNumber, total, paymentMethod, deliveryMethod, locationId,
+            name, phone, email, address, deliveryStatus, paymentProofUrl
         ]);
 
         // 4. Insert Items

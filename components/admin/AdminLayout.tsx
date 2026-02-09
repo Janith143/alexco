@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, AlertTriangle, Ticket, Users, Store, LogOut, Shield, CreditCard, FileText, Calendar, ShoppingBag, Settings, Folder } from "lucide-react";
+import { LayoutDashboard, AlertTriangle, Ticket, Users, Store, LogOut, Shield, CreditCard, FileText, Calendar, ShoppingBag, Settings, Folder, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
@@ -46,6 +46,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         { href: "/paths/POS", label: "POS Terminal", icon: CreditCard, roles: ['super_user', 'admin', 'manager', 'cashier'] },
         { href: "/paths/admin/inventory", label: "Inventory", icon: AlertTriangle, roles: ['super_user', 'admin', 'manager', 'technician', 'accountant', 'ecommerce_admin', 'repair_admin'] },
         { href: "/paths/admin/orders", label: "Online Orders", icon: ShoppingBag, roles: ['super_user', 'admin', 'manager', 'accountant', 'ecommerce_admin'] },
+        { href: "/paths/admin/messages", label: "Messages", icon: MessageSquare, roles: ['super_user', 'admin', 'manager', 'ecommerce_admin'] },
         { href: "/paths/Ticket", label: "Job Tickets", icon: Ticket, roles: ['super_user', 'admin', 'manager', 'technician', 'repair_admin'] },
 
         // HR Section
@@ -77,6 +78,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             if (item.href === '/paths/Ticket') return user.permissions.includes('tickets.manage');
             if (item.label === 'Inventory') return user.permissions.includes('inventory.view');
             if (item.label === 'Online Orders') return user.permissions.includes('ecommerce.manage');
+            if (item.label === 'Messages') return user.permissions.includes('ecommerce.manage') || user.permissions.includes('admin.view');
 
             // Granular HR/Payroll permissions
             if (item.label === 'HR Dashboard') return user.permissions.includes('hr.view');

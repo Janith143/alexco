@@ -7,7 +7,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Eye, Filter, FileText } from "lucide-react";
+import { Search, Eye, Filter, FileText, Truck, Store } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getOnlineOrders, updateOrderStatus } from "@/server-actions/admin/orders";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -59,6 +59,7 @@ export default function OnlineOrdersPage() {
                         <SelectContent>
                             <SelectItem value="ALL">All Orders</SelectItem>
                             <SelectItem value="PENDING">Pending</SelectItem>
+                            <SelectItem value="PICKUP">Store Pickup</SelectItem>
                             <SelectItem value="CONFIRMED">Confirmed</SelectItem>
                             <SelectItem value="SHIPPED">Shipped</SelectItem>
                             <SelectItem value="DELIVERED">Delivered</SelectItem>
@@ -77,19 +78,20 @@ export default function OnlineOrdersPage() {
                             <TableHead>Date</TableHead>
                             <TableHead>Customer</TableHead>
                             <TableHead>Total</TableHead>
+                            <TableHead>Method</TableHead>
                             <TableHead>Payment</TableHead>
-                            <TableHead>Delivery Status</TableHead>
+                            <TableHead>Status</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8 text-slate-400">Loading orders...</TableCell>
+                                <TableCell colSpan={8} className="text-center py-8 text-slate-400">Loading orders...</TableCell>
                             </TableRow>
                         ) : orders.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8 text-slate-400">No online orders found.</TableCell>
+                                <TableCell colSpan={8} className="text-center py-8 text-slate-400">No online orders found.</TableCell>
                             </TableRow>
                         ) : (
                             orders.map((order) => (
@@ -103,6 +105,17 @@ export default function OnlineOrdersPage() {
                                         <div className="text-xs text-slate-500">{order.customer_phone}</div>
                                     </TableCell>
                                     <TableCell>LKR {Number(order.total_amount).toLocaleString()}</TableCell>
+                                    <TableCell>
+                                        {order.delivery_method === 'pickup' ? (
+                                            <Badge className="bg-green-100 text-green-800 border-green-200 gap-1">
+                                                <Store className="h-3 w-3" /> Pickup
+                                            </Badge>
+                                        ) : (
+                                            <Badge className="bg-blue-100 text-blue-800 border-blue-200 gap-1">
+                                                <Truck className="h-3 w-3" /> Delivery
+                                            </Badge>
+                                        )}
+                                    </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
                                             <Badge variant="outline">{order.payment_method}</Badge>

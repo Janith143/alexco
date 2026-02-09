@@ -67,6 +67,7 @@ CREATE TABLE IF NOT EXISTS sales_orders (
     total_amount DECIMAL(10, 2) NOT NULL,
     status VARCHAR(20) NOT NULL, -- COMPLETED, REFUNDED
     payment_method VARCHAR(50) NOT NULL, -- CASH, CARD, ONLINE
+    delivery_method VARCHAR(20) DEFAULT 'delivery', -- delivery, pickup
     location_id CHAR(36),
     cashier_id CHAR(36),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -691,3 +692,20 @@ CREATE TABLE IF NOT EXISTS role_permissions (
 );
 
 -- Note: users table updated via migration to include role_id FK
+
+-- ==========================================
+-- 9. CONTACT MESSAGES
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id CHAR(36) PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100),
+    email VARCHAR(255) NOT NULL,
+    subject VARCHAR(255),
+    message TEXT NOT NULL,
+    status ENUM('new', 'read', 'replied', 'archived') DEFAULT 'new',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_status (status),
+    INDEX idx_created (created_at)
+);
