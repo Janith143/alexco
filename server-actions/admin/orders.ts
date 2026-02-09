@@ -5,7 +5,7 @@ import { query } from "@/lib/db";
 export async function getOnlineOrders(statusFilter: string = "ALL") {
     try {
         let sql = `
-            SELECT id, order_number, total_amount, payment_method, status, delivery_status, customer_name, customer_phone, customer_email, payment_proof, created_at, shipping_address
+            SELECT id, order_number, total_amount, payment_method, delivery_method, status, delivery_status, customer_name, customer_phone, customer_email, payment_proof, created_at, shipping_address
             FROM sales_orders
             WHERE order_source = 'ONLINE'
         `;
