@@ -4,10 +4,22 @@ import { query } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 
 export async function getDashboardStats() {
+    // Return defaults during build or when auth fails
+    const defaultStats = {
+        todaySales: 0,
+        salesPercentage: "0",
+        activeTickets: 0,
+        pendingTickets: 0,
+        lowStockItems: 0,
+        onlineOrders: 0,
+        toShipOrders: 0
+    };
+
     try {
         await requirePermission('admin.view');
     } catch (e) {
-        throw new Error("Unauthorized: Missing admin.view permission");
+        // Return defaults during build-time prerendering
+        return defaultStats;
     }
 
     try {
