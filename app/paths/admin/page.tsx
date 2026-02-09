@@ -7,6 +7,9 @@ import { AlertCircle, TrendingUp, Users, ShoppingCart, Wallet } from "lucide-rea
 import InventoryAlerts from "@/components/admin/InventoryAlerts";
 import { getDashboardStats } from "@/server-actions/admin/dashboard";
 
+// Prevent static prerendering - requires authentication
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboardPage() {
     const stats = await getDashboardStats();
 
