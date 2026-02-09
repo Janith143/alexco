@@ -9,16 +9,6 @@ const JWT_SECRET = new TextEncoder().encode(
 // Routes that require authentication
 const PROTECTED_ROUTES = ['/paths'];
 
-// Route access by role
-const ROUTE_PERMISSIONS: Record<string, string[]> = {
-    '/paths/POS': ['super_user', 'admin', 'manager', 'cashier'],
-    '/paths/Ticket': ['super_user', 'admin', 'manager', 'technician', 'repair_admin'],
-    '/paths/admin/inventory': ['super_user', 'admin', 'manager', 'technician', 'accountant', 'ecommerce_admin', 'repair_admin'],
-    '/paths/HR': ['super_user', 'admin', 'manager', 'hr_staff', 'accountant'],
-    '/paths/admin/users': ['super_user', 'admin'],
-    '/paths/admin': ['super_user', 'admin', 'manager', 'accountant'],
-};
-
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
@@ -42,16 +32,9 @@ export async function middleware(request: NextRequest) {
         const { payload } = await jwtVerify(token, JWT_SECRET);
         const userRole = payload.role as string;
 
-        // Check route-specific permissions
-        for (const [route, allowedRoles] of Object.entries(ROUTE_PERMISSIONS)) {
-            if (pathname.startsWith(route)) {
-                if (!allowedRoles.includes(userRole)) {
-                    // Redirect to dashboard with no access
-                    return NextResponse.redirect(new URL('/paths/admin?error=no_access', request.url));
-                }
-                break;
-            }
-        }
+        // Note: Permission-based access control is now handled at the page/component level
+        // via getCurrentUser().permissions checks in the AdminLayout and route handlers.
+        // The middleware only verifies the user is authenticated.
 
         // Add user info to request headers for downstream use
         const response = NextResponse.next();
@@ -70,3 +53,4 @@ export async function middleware(request: NextRequest) {
 export const config = {
     matcher: ['/paths/:path*'],
 };
+

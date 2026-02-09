@@ -2,7 +2,7 @@
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
-import { getTicketDetails } from "@/server-actions/admin/tickets";
+import { getTicketDetails, deleteTicket } from "@/server-actions/admin/tickets";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -16,15 +16,51 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { Printer, MessageCircle } from "lucide-react";
+import { Printer, MessageCircle, Trash2, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
 
 export default function TicketDetailSheet({ ticketId, open, onOpenChange }: { ticketId: string | null, open: boolean, onOpenChange: (open: boolean) => void }) {
     const [details, setDetails] = useState<any>(null);
+    const [deleting, setDeleting] = useState(false);
+    const { toast } = useToast();
 
     const loadDetails = async () => {
         if (!ticketId) return;
         const data = await getTicketDetails(ticketId);
         setDetails(data);
+    };
+
+    const handleDelete = async () => {
+        if (!ticketId) return;
+        setDeleting(true);
+        try {
+            const res = await deleteTicket(ticketId);
+            if (res.success) {
+                toast({ title: "Ticket Deleted", description: "The ticket has been permanently removed." });
+                onOpenChange(false);
+                // We'll need to refresh the list, but since this is a sheet, 
+                // the parent usually handles the refresh. 
+                // Most pages refresh on sheet close or have their own logic.
+                if (typeof window !== 'undefined') window.location.reload();
+            } else {
+                toast({ title: "Error", description: res.error || "Failed to delete ticket", variant: "destructive" });
+            }
+        } catch (error) {
+            toast({ title: "Error", description: "Something went wrong", variant: "destructive" });
+        } finally {
+            setDeleting(false);
+        }
     };
 
     useEffect(() => {
@@ -66,24 +102,49 @@ export default function TicketDetailSheet({ ticketId, open, onOpenChange }: { ti
 
 
 
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="gap-2">
-                                    <Printer className="h-4 w-4" /> Print
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => window.open(`/paths/Ticket/print/${ticketId}?type=job-card&print=true`, '_blank', 'width=800,height=600')}>
-                                    Device Receipt (Job Card)
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => window.open(`/paths/Ticket/print/${ticketId}?type=estimate&print=true`, '_blank', 'width=800,height=600')}>
-                                    Repair Estimate
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => window.open(`/paths/Ticket/print/${ticketId}?type=invoice&print=true`, '_blank', 'width=800,height=600')}>
-                                    Final Invoice
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                        <div className="flex items-center gap-2">
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="outline" size="sm" className="text-red-600 border-red-200 hover:bg-red-50 gap-2" disabled={deleting}>
+                                        {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                        Delete
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            This action cannot be undone. This will permanently delete the ticket, its parts list, and history log.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+                                            Delete Permanently
+                                        </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" size="sm" className="gap-2">
+                                        <Printer className="h-4 w-4" /> Print
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => window.open(`/paths/Ticket/print/${ticketId}?type=job-card&print=true`, '_blank', 'width=800,height=600')}>
+                                        Device Receipt (Job Card)
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => window.open(`/paths/Ticket/print/${ticketId}?type=estimate&print=true`, '_blank', 'width=800,height=600')}>
+                                        Repair Estimate
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => window.open(`/paths/Ticket/print/${ticketId}?type=invoice&print=true`, '_blank', 'width=800,height=600')}>
+                                        Final Invoice
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
                     </div>
                     <SheetDescription>
                         Created on {new Date(details.created_at).toLocaleDateString()}

@@ -1,6 +1,7 @@
 "use server";
 
 import { query } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 
 export type InventoryConflict = {
     productId: string;
@@ -73,6 +74,12 @@ export async function resolveConflict(productId: string, resolution: "BACKORDER"
 // --- New Features for Phase 5 Completion ---
 
 export async function getInventoryList(search?: string) {
+    try {
+        await requirePermission('inventory.view');
+    } catch (e) {
+        throw new Error("Unauthorized: Missing inventory.view permission");
+    }
+
     let sql = `
         SELECT 
             p.id, p.sku, p.name, p.category_path, p.price_retail, p.price_cost, p.price_sale,
@@ -97,6 +104,12 @@ export async function getInventoryList(search?: string) {
 }
 
 export async function createProduct(data: any) {
+    try {
+        await requirePermission('inventory.manage');
+    } catch (e) {
+        return { error: 'Unauthorized' };
+    }
+
     const {
         name, sku, price, category, initialStock, description, long_description,
         variations_raw, price_cost, price_sale, weight_g,
@@ -175,6 +188,12 @@ export async function createProduct(data: any) {
 }
 
 export async function adjustStock(productId: string, delta: number, reason: string) {
+    try {
+        await requirePermission('inventory.manage');
+    } catch (e) {
+        return { error: 'Unauthorized' };
+    }
+
     const { v4: uuidv4 } = await import('uuid');
     try {
         const [loc] = await query("SELECT id FROM locations LIMIT 1") as any[];
@@ -196,6 +215,12 @@ export async function adjustStock(productId: string, delta: number, reason: stri
 }
 
 export async function deleteProduct(productId: string) {
+    try {
+        await requirePermission('inventory.manage');
+    } catch (e) {
+        return { success: false, error: 'Unauthorized' };
+    }
+
     try {
         // Check for sales history
         const [salesCheck] = await query(`
@@ -242,6 +267,12 @@ export async function deleteProduct(productId: string) {
 }
 
 export async function updateProduct(id: string, data: any) {
+    try {
+        await requirePermission('inventory.manage');
+    } catch (e) {
+        return { error: 'Unauthorized' };
+    }
+
     const {
         name, sku, price, category, description, long_description,
         variations_raw, price_cost, price_sale, weight_g,

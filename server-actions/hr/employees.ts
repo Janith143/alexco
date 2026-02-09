@@ -73,8 +73,10 @@ export async function createEmployee(data: any) {
             department, designation, role, employment_type, joined_date,
             basic_salary, fixed_allowances,
             bank_name, bank_branch, bank_account_number, bank_account_name,
-            epf_number, etf_number
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            bank_name, bank_branch, bank_account_number, bank_account_name,
+            epf_number, etf_number,
+            epf_employee_rate, epf_employer_rate, etf_employer_rate
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
         id, employeeNumber, data.full_name || null, data.name_with_initials || null, data.nic_number || null,
         data.date_of_birth || null, data.gender || null, data.marital_status || null,
@@ -84,7 +86,8 @@ export async function createEmployee(data: any) {
         data.department || null, data.designation || null, data.role || 'staff', data.employment_type || 'permanent', data.joined_date || null,
         data.basic_salary || 0, data.fixed_allowances || 0,
         data.bank_name || null, data.bank_branch || null, data.bank_account_number || null, data.bank_account_name || null,
-        data.epf_number || null, data.etf_number || null
+        data.epf_number || null, data.etf_number || null,
+        data.epf_employee_rate || 0.08, data.epf_employer_rate || 0.12, data.etf_employer_rate || 0.03
     ]);
 
     return { success: true, id, employeeNumber };
@@ -109,7 +112,8 @@ export async function updateEmployee(id: string, data: any) {
         'department', 'designation', 'role', 'employment_type', 'joined_date', 'confirmation_date', 'resignation_date',
         'basic_salary', 'fixed_allowances',
         'bank_name', 'bank_branch', 'bank_account_number', 'bank_account_name',
-        'epf_number', 'etf_number', 'is_active'
+        'epf_number', 'etf_number', 'is_active',
+        'epf_employee_rate', 'epf_employer_rate', 'etf_employer_rate'
     ];
 
     for (const field of allowedFields) {
@@ -124,5 +128,34 @@ export async function updateEmployee(id: string, data: any) {
     values.push(id);
     await query(`UPDATE employees SET ${fields.join(', ')} WHERE id = ? `, values);
 
+    // Sync role to linked user if role was updated
+    if (data.role) {
+        // Get linked user_id from employee
+        const employees = await query(`SELECT user_id FROM employees WHERE id = ?`, [id]) as any[];
+        const employee = employees[0];
+
+        if (employee?.user_id) {
+            // Get role_id from roles table by slug
+            const roles = await query(`SELECT id FROM roles WHERE slug = ?`, [data.role]) as any[];
+            const role = roles[0];
+
+            if (role) {
+                // Update user's role_id
+                await query(`UPDATE users SET role_id = ? WHERE id = ?`, [role.id, employee.user_id]);
+            }
+        }
+    }
+
     return { success: true };
+}
+
+// Get employees who do not have a user account
+export async function getEmployeesWithoutUsers() {
+    const rows = await query(`
+        SELECT id, full_name, employee_number, email, designation, role 
+        FROM employees 
+        WHERE user_id IS NULL 
+        ORDER BY full_name
+    `) as any[];
+    return rows;
 }

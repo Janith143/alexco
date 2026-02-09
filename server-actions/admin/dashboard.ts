@@ -1,9 +1,15 @@
-
 "use server";
 
 import { query } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 
 export async function getDashboardStats() {
+    try {
+        await requirePermission('admin.view');
+    } catch (e) {
+        throw new Error("Unauthorized: Missing admin.view permission");
+    }
+
     try {
         // 1. Total Sales Today
         const [salesRow] = await query(`

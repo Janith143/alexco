@@ -7,9 +7,10 @@ interface EmployeeDetailsTabProps {
     formData: any;
     editing: boolean;
     handleChange: (field: string, value: any) => void;
+    roles?: { id: string; name: string; slug: string }[];
 }
 
-export function EmployeeDetailsTab({ formData, editing, handleChange }: EmployeeDetailsTabProps) {
+export function EmployeeDetailsTab({ formData, editing, handleChange, roles = [] }: EmployeeDetailsTabProps) {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Personal Info */}
@@ -53,6 +54,7 @@ export function EmployeeDetailsTab({ formData, editing, handleChange }: Employee
                     <div className="grid grid-cols-2 gap-4">
                         <Field label="Department" field="department" value={formData.department} onChange={handleChange} editing={editing} type="select" options={['retail', 'solar', 'repair', 'admin', 'hr', 'accounts']} />
                         <Field label="Designation" field="designation" value={formData.designation} onChange={handleChange} editing={editing} />
+                        <Field label="System Role" field="role" value={formData.role} onChange={handleChange} editing={editing} type="select" options={roles.length > 0 ? roles.map(r => r.slug) : ['technician', 'cashier', 'hr_staff', 'manager', 'admin']} />
                         <Field label="Employment Type" field="employment_type" value={formData.employment_type} onChange={handleChange} editing={editing} type="select" options={['permanent', 'contract', 'probation', 'intern']} />
                         <Field label="Joined Date" field="joined_date" value={formatDate(formData.joined_date)} onChange={handleChange} editing={editing} type="date" />
                         <Field label="EPF Number" field="epf_number" value={formData.epf_number} onChange={handleChange} editing={editing} />
@@ -70,6 +72,10 @@ export function EmployeeDetailsTab({ formData, editing, handleChange }: Employee
                     <div className="grid grid-cols-2 gap-4">
                         <Field label="Basic Salary (LKR)" field="basic_salary" value={formData.basic_salary} onChange={handleChange} editing={editing} type="number" />
                         <Field label="Fixed Allowances" field="fixed_allowances" value={formData.fixed_allowances} onChange={handleChange} editing={editing} type="number" />
+                        <Field label="EPF Employee Rate (0.08 = 8%)" field="epf_employee_rate" value={formData.epf_employee_rate} onChange={handleChange} editing={editing} type="number" />
+                        <Field label="EPF Employer Rate (0.12 = 12%)" field="epf_employer_rate" value={formData.epf_employer_rate} onChange={handleChange} editing={editing} type="number" />
+                        <Field label="ETF Employer Rate (0.03 = 3%)" field="etf_employer_rate" value={formData.etf_employer_rate} onChange={handleChange} editing={editing} type="number" />
+                        <div className="hidden md:block" />
                         <Field label="Bank Name" field="bank_name" value={formData.bank_name} onChange={handleChange} editing={editing} />
                         <Field label="Branch" field="bank_branch" value={formData.bank_branch} onChange={handleChange} editing={editing} />
                         <Field label="Account Number" field="bank_account_number" value={formData.bank_account_number} onChange={handleChange} editing={editing} />

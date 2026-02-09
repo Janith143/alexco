@@ -8,29 +8,37 @@ export interface PayrollInput {
     fixedAllowances: number;
     otHours: number;
     isPoyaOrSunday?: boolean; // For double OT rate if needed
+    epfEmployeeRate?: number; // Default 0.08
+    epfEmployerRate?: number; // Default 0.12
+    etfEmployerRate?: number; // Default 0.03
 }
 
 export interface PayrollOutput {
     totalEarnings: number; // For EPF/ETF
     grossSalary: number;   // Total before tax
-    epfEmployee: number;   // 8%
-    epfEmployer: number;   // 12%
-    etfEmployer: number;   // 3%
+    epfEmployee: number;   // Custom Rate
+    epfEmployer: number;   // Custom Rate
+    etfEmployer: number;   // Custom Rate
     otPay: number;
     apitTax: number;       // PAYE
     netSalary: number;
 }
 
 export const calculatePayroll = (input: PayrollInput): PayrollOutput => {
-    const { basicSalary, fixedAllowances, otHours } = input;
+    const {
+        basicSalary, fixedAllowances, otHours,
+        epfEmployeeRate = 0.08,
+        epfEmployerRate = 0.12,
+        etfEmployerRate = 0.03
+    } = input;
 
     // 1. Total Earnings for EPF/ETF (Basic + Fixed Allowances)
     const totalEarnings = basicSalary + fixedAllowances;
 
     // 2. EPF & ETF
-    const epfEmployee = totalEarnings * 0.08;
-    const epfEmployer = totalEarnings * 0.12;
-    const etfEmployer = totalEarnings * 0.03;
+    const epfEmployee = totalEarnings * epfEmployeeRate;
+    const epfEmployer = totalEarnings * epfEmployerRate;
+    const etfEmployer = totalEarnings * etfEmployerRate;
 
     // 3. Overtime
     // Standard divisor is 240 hours (30 days * 8 hours) or 200 depending on shop act. 

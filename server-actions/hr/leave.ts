@@ -3,8 +3,22 @@
 import { query } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
 
+import { getCurrentUser, requirePermission } from '@/lib/auth';
+
 export async function submitLeaveRequest(data: any) {
+    const user = await getCurrentUser();
+    if (!user) return { error: "Unauthorized" };
+
     const { employee_id, leave_type_id, start_date, end_date, days_requested, reason } = data;
+
+    // Self-service check
+    if (user.employee_id !== employee_id) {
+        // If not submitting for self, must have HR permission
+        if (!user.permissions.includes('hr.manage')) {
+            return { error: "Unauthorized: You can only submit leave requests for yourself." };
+        }
+    }
+
     const id = crypto.randomUUID();
 
     await query(`
@@ -13,10 +27,21 @@ export async function submitLeaveRequest(data: any) {
     `, [id, employee_id, leave_type_id, start_date, end_date, days_requested, reason]);
 
     revalidatePath('/paths/HR/leave');
+    revalidatePath('/paths/my-portal');
     return { success: true };
 }
 
 export async function getLeaveBalances(employeeId: string, year: number) {
+    const user = await getCurrentUser();
+    if (!user) return [];
+
+    // Self-service check
+    if (user.employee_id !== employeeId) {
+        if (!user.permissions.includes('hr.view')) {
+            throw new Error("Unauthorized");
+        }
+    }
+
     const rows = await query(`
         SELECT lt.id as type_id, lt.name, lt.code, 
                COALESCE(lb.entitled_days, 14) as entitled_days, 
@@ -29,7 +54,13 @@ export async function getLeaveBalances(employeeId: string, year: number) {
 }
 
 export async function getPendingRequests() {
-    // For managers/admin to approve
+    // Only HR managers can see pending requests
+    try {
+        await requirePermission('hr.manage');
+    } catch (e) {
+        return [];
+    }
+
     const rows = await query(`
         SELECT lr.*, e.full_name as employee_name, lt.name as leave_type
         FROM leave_requests lr
@@ -42,6 +73,13 @@ export async function getPendingRequests() {
 }
 
 export async function updateLeaveStatus(requestId: string, status: 'approved' | 'rejected', approverId: string) {
+    // Only HR managers can approve/reject
+    try {
+        await requirePermission('hr.manage');
+    } catch (e) {
+        throw new Error('Unauthorized: You do not have permission to approve/reject leaves');
+    }
+
     // 1. Update request status
     await query(`
         UPDATE leave_requests 
@@ -89,6 +127,16 @@ export async function getAllLeaveRequests() {
 
 // Get employee leave history (Moved from hr-employees.ts)
 export async function getEmployeeLeaveHistory(employeeId: string) {
+    const user = await getCurrentUser();
+    if (!user) return [];
+
+    // Self-service check
+    if (user.employee_id !== employeeId) {
+        if (!user.permissions.includes('hr.view')) {
+            return [];
+        }
+    }
+
     const rows = await query(`
         SELECT lr.*, lt.name as leave_type_name
         FROM leave_requests lr

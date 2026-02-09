@@ -3,6 +3,7 @@
 import { query } from "@/lib/db";
 import { v4 as uuidv4 } from "uuid";
 import { revalidatePath } from "next/cache";
+import { requirePermission } from "@/lib/auth";
 
 export type Category = {
     id: string;
@@ -61,6 +62,12 @@ export async function getCategories(includeInactive = false): Promise<Category[]
 }
 
 export async function createCategory(data: any) {
+    try {
+        await requirePermission('inventory.categories');
+    } catch (e) {
+        return { error: 'Unauthorized' };
+    }
+
     const { name, slug, description, parent_id, image, icon, is_active, order_index } = data;
     const id = uuidv4();
 
@@ -88,6 +95,12 @@ export async function createCategory(data: any) {
 }
 
 export async function updateCategory(id: string, data: any) {
+    try {
+        await requirePermission('inventory.categories');
+    } catch (e) {
+        return { error: 'Unauthorized' };
+    }
+
     const { name, slug, description, parent_id, image, icon, is_active, order_index } = data;
 
     try {
@@ -115,6 +128,12 @@ export async function updateCategory(id: string, data: any) {
 }
 
 export async function deleteCategory(id: string) {
+    try {
+        await requirePermission('inventory.categories');
+    } catch (e) {
+        return { error: 'Unauthorized' };
+    }
+
     try {
         // Check for subcategories
         const [subCheck] = await query(`SELECT COUNT(*) as count FROM categories WHERE parent_id = ?`, [id]) as any[];

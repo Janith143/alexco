@@ -1,24 +1,30 @@
+
 const mysql = require('mysql2/promise');
 require('dotenv').config({ path: '.env.local' });
 
-async function main() {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-        console.error("DATABASE_URL not found in .env.local");
-        process.exit(1);
-    }
-
+async function inspectSchema() {
     try {
-        const connection = await mysql.createConnection(connectionString);
+        const connection = await mysql.createConnection(process.env.DATABASE_URL);
 
-        const [columns] = await connection.query("DESCRIBE products");
+        console.log('Inspecting employees table columns...');
+        const [rows] = await connection.execute(`SHOW COLUMNS FROM employees`);
 
-        console.log(JSON.stringify(columns, null, 2));
+        // Log column names only for clarity if there are many
+        const columns = rows.map(r => r.Field);
+        console.log('Columns:', columns.join(', '));
+
+        // Check specifically for user_id
+        const userIdCol = rows.find(r => r.Field === 'user_id');
+        if (userIdCol) {
+            console.log('Found user_id column:', userIdCol);
+        } else {
+            console.log('user_id column NOT FOUND');
+        }
 
         await connection.end();
-    } catch (e) {
-        console.error("Error inspecting schema:", e);
+    } catch (error) {
+        console.error('Error:', error);
     }
 }
 
-main();
+inspectSchema();

@@ -23,8 +23,20 @@ const mockSMSGateway = async (phone: string, message: string) => {
 export async function createJobTicket(data: TicketData) {
     const { query } = await import('@/lib/db');
 
+    // Prevent duplicates (same name and device in the last 30 seconds)
+    const [existing] = await query(`
+        SELECT id FROM tickets 
+        WHERE customer_name = ? AND device_model = ? 
+        AND created_at > DATE_SUB(NOW(), INTERVAL 30 SECOND)
+        LIMIT 1
+    `, [data.customerName, data.deviceModel]) as any[];
+
+    if (existing) {
+        return { success: false, error: 'A similar ticket was recently created. Please check the ticket list.' };
+    }
+
     // Get next ID from sequence
-    await query('INSERT INTO ticket_sequences VALUES (NULL)');
+    await query('INSERT INTO ticket_sequences (id) VALUES (NULL)');
     const rows = (await query('SELECT LAST_INSERT_ID() as id')) as any[];
     const seqId = rows[0].id;
 

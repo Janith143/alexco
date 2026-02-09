@@ -116,8 +116,58 @@ export async function resetPassword(userId: string, newPassword: string): Promis
 
     return { success: true };
 }
+// Fix Permissions (Temporary)
+export async function fixPermissions() {
+    try {
+        // 1. Fix Permissions
+        await query(`
+            INSERT IGNORE INTO role_permissions (role_id, permission_id)
+            SELECT r.id, p.id 
+            FROM roles r, permissions p 
+            WHERE r.slug IN ('super_user', 'admin', 'developer', 'hr_manager', 'manager') 
+            AND p.code IN ('hr.view', 'hr.manage', 'payroll.view', 'report.view')
+        `);
 
-// Get all users (for management UI)
+        // 2. Add Payroll Rate Columns (Migration)
+        // Check if columns exist first or use IF NOT EXISTS if supported (MySQL 8.0+)
+        // Since we can't easily check version, we'll try adding them one by one in a try-catch block 
+        // to avoid failing if they exist (for older MySQL)
+
+        const columns = [
+            "ADD COLUMN IF NOT EXISTS epf_employee_rate DECIMAL(5, 4) DEFAULT 0.0800",
+            "ADD COLUMN IF NOT EXISTS epf_employer_rate DECIMAL(5, 4) DEFAULT 0.1200",
+            "ADD COLUMN IF NOT EXISTS etf_employer_rate DECIMAL(5, 4) DEFAULT 0.0300"
+        ];
+
+        try {
+            // Try valid MySQL 8.0+ syntax first
+            await query(`
+                ALTER TABLE employees 
+                ADD COLUMN IF NOT EXISTS epf_employee_rate DECIMAL(5, 4) DEFAULT 0.0800,
+                ADD COLUMN IF NOT EXISTS epf_employer_rate DECIMAL(5, 4) DEFAULT 0.1200,
+                ADD COLUMN IF NOT EXISTS etf_employer_rate DECIMAL(5, 4) DEFAULT 0.0300
+            `);
+        } catch (e: any) {
+            // Fallback for older MySQL: Try adding individually, ignore duplicate column errors
+            console.log("Bulk alter failed, trying individual columns...");
+            for (const col of columns) {
+                try {
+                    await query(`ALTER TABLE employees ${col.replace('IF NOT EXISTS', '')}`);
+                } catch (err: any) {
+                    // Ignore "Duplicate column name" error (Code 1060)
+                    if (err.code !== 'ER_DUP_FIELDNAME' && err.errno !== 1060) {
+                        console.error(`Failed to add column: ${col}`, err);
+                    }
+                }
+            }
+        }
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Fix Permissions Error:", error);
+        return { error: error.message };
+    }
+}
 export async function getAllUsers(): Promise<any[]> {
     const currentUser = await getCurrentUser();
 
@@ -126,8 +176,13 @@ export async function getAllUsers(): Promise<any[]> {
     }
 
     const rows = await query(
-        `SELECT id, username, full_name, email, role, is_active, created_at, last_login 
-         FROM users ORDER BY created_at DESC`
+        `SELECT u.id, u.username, u.full_name, u.email, u.is_active, u.created_at, u.last_login,
+                COALESCE(r.name, u.role) as role,
+                e.employee_number, e.designation
+         FROM users u
+         LEFT JOIN roles r ON u.role_id = r.id
+         LEFT JOIN employees e ON u.id = e.user_id
+         ORDER BY u.created_at DESC`
     ) as any[];
 
     return rows;

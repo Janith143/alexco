@@ -8,6 +8,7 @@ import { getDisciplinaryRecords, addDisciplinaryRecord } from "@/server-actions/
 import { getEmployeeDocuments, uploadEmployeeDocument } from "@/server-actions/hr/documents";
 import { createEmployeeUserAccount, getEmployeeUser } from "@/server-actions/hr/user-access";
 import { getEmployeeLeaveHistory } from "@/server-actions/hr/leave";
+import { getRoles } from "@/server-actions/roles";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { EmployeeDetailsTab } from "@/components/hr/employees/EmployeeDetailsTab";
@@ -16,8 +17,11 @@ import { EmployeeDisciplinaryTab } from "@/components/hr/employees/EmployeeDisci
 import { EmployeeDocumentsTab } from "@/components/hr/employees/EmployeeDocumentsTab";
 import { EmployeeLeaveTab } from "@/components/hr/employees/EmployeeLeaveTab";
 import { EmployeeAccessTab } from "@/components/hr/employees/EmployeeAccessTab";
+import { EmployeePayrollTab } from "@/components/hr/employees/EmployeePayrollTab";
+import { PayslipModal } from "@/components/hr/PayslipModal";
+import { calculatePayroll } from "@/lib/hr/payrollEngine";
 
-const TABS = ['details', 'documents', 'assets', 'disciplinary', 'leave', 'access'];
+const TABS = ['details', 'payroll', 'documents', 'assets', 'disciplinary', 'leave', 'access'];
 
 export default function EmployeeProfilePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -27,10 +31,13 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
     const [documents, setDocuments] = useState<any[]>([]);
     const [userAccount, setUserAccount] = useState<any>(null);
     const [leaveHistory, setLeaveHistory] = useState<any[]>([]);
+    const [roles, setRoles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('details');
     const [editing, setEditing] = useState(false);
     const [formData, setFormData] = useState<any>({});
+    const [selectedPayslipEmployee, setSelectedPayslipEmployee] = useState<any>(null);
+    const [isPayslipModalOpen, setIsPayslipModalOpen] = useState(false);
 
     async function loadData() {
         const emp = await getEmployee(id);
@@ -46,12 +53,33 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
         setUserAccount(userData);
         const leaveData = await getEmployeeLeaveHistory(id);
         setLeaveHistory(leaveData);
+        const rolesData = await getRoles();
+        setRoles(rolesData);
         setLoading(false);
     }
 
     useEffect(() => {
         loadData();
     }, [id]);
+
+    function handleViewPayslip() {
+        const result = calculatePayroll({
+            basicSalary: Number(employee.basic_salary) || 0,
+            fixedAllowances: Number(employee.fixed_allowances) || 0,
+            otHours: 0,
+            epfEmployeeRate: employee.epf_employee_rate ? Number(employee.epf_employee_rate) : 0.08,
+            epfEmployerRate: employee.epf_employer_rate ? Number(employee.epf_employer_rate) : 0.12,
+            etfEmployerRate: employee.etf_employer_rate ? Number(employee.etf_employer_rate) : 0.03
+        });
+        setSelectedPayslipEmployee({
+            name: employee.full_name,
+            role: employee.designation || employee.role,
+            basic: Number(employee.basic_salary) || 0,
+            allowances: Number(employee.fixed_allowances) || 0,
+            ...result
+        });
+        setIsPayslipModalOpen(true);
+    }
 
     async function handleSave() {
         await updateEmployee(id, formData);
@@ -145,7 +173,11 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
 
             {/* Tab Content */}
             {activeTab === 'details' && (
-                <EmployeeDetailsTab formData={formData} editing={editing} handleChange={handleChange} />
+                <EmployeeDetailsTab formData={formData} editing={editing} handleChange={handleChange} roles={roles} />
+            )}
+
+            {activeTab === 'payroll' && (
+                <EmployeePayrollTab employee={employee} onViewPayslip={handleViewPayslip} />
             )}
 
             {activeTab === 'documents' && (
@@ -167,6 +199,12 @@ export default function EmployeeProfilePage({ params }: { params: Promise<{ id: 
             {activeTab === 'access' && (
                 <EmployeeAccessTab userAccount={userAccount} employee={employee} handleCreateUser={handleCreateUser} />
             )}
+
+            <PayslipModal
+                isOpen={isPayslipModalOpen}
+                onClose={() => setIsPayslipModalOpen(false)}
+                employee={selectedPayslipEmployee}
+            />
         </div>
     );
 }

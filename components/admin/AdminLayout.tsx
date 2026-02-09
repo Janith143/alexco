@@ -41,6 +41,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     // Base nav items available to most roles
     const allNavItems = [
+        { href: "/paths/my-portal", label: "My Portal", icon: LayoutDashboard, roles: [] }, // Access controlled by filtering below
         { href: "/paths/admin", label: "Dashboard", icon: LayoutDashboard, roles: ['super_user', 'admin', 'manager', 'accountant'] },
         { href: "/paths/POS", label: "POS Terminal", icon: CreditCard, roles: ['super_user', 'admin', 'manager', 'cashier'] },
         { href: "/paths/admin/inventory", label: "Inventory", icon: AlertTriangle, roles: ['super_user', 'admin', 'manager', 'technician', 'accountant', 'ecommerce_admin', 'repair_admin'] },
@@ -69,20 +70,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             // Mapping old role-based logic to new permission-based logic
             // ideally we update the items definition to use permission codes directly
 
-            // Temporary mapping for sidebar items to permissions
+            // Mapping sidebar items to granular permissions
+            if (item.label === 'My Portal') return true; // Available to all authenticated users
             if (item.label === 'Dashboard') return user.permissions.includes('admin.view');
             if (item.label === 'POS Terminal') return user.permissions.includes('pos.access');
             if (item.href === '/paths/Ticket') return user.permissions.includes('tickets.manage');
             if (item.label === 'Inventory') return user.permissions.includes('inventory.view');
             if (item.label === 'Online Orders') return user.permissions.includes('ecommerce.manage');
 
-            if (item.href.startsWith('/paths/HR')) return user.permissions.includes('hr.view');
+            // Granular HR/Payroll permissions
+            if (item.label === 'HR Dashboard') return user.permissions.includes('hr.view');
+            if (item.label === 'Employees') return user.permissions.includes('hr.view') || user.permissions.includes('hr.manage');
+            if (item.label === 'Leave Management') return user.permissions.includes('hr.view');
+            if (item.label === 'Payroll') return user.permissions.includes('payroll.view') || user.permissions.includes('payroll.manage');
 
-            if (item.label === 'Reports Hub') return user.permissions.includes('admin.view'); // or specific report perm
-            if (item.label === 'Settings') return user.permissions.includes('admin.manage');
+            // Granular Admin permissions
+            if (item.label === 'Reports Hub') return user.permissions.includes('reports.view') || user.permissions.includes('admin.view');
+            if (item.label === 'Settings') return user.permissions.includes('admin.settings') || user.permissions.includes('admin.manage');
             if (item.label === 'User Management') return user.permissions.includes('users.manage');
             if (item.label === 'Roles') return user.permissions.includes('users.manage');
-            if (item.label === 'Categories') return user.permissions.includes('inventory.view') || user.permissions.includes('admin.manage');
+            if (item.label === 'Categories') return user.permissions.includes('inventory.categories') || user.permissions.includes('inventory.manage');
 
             return false;
         })

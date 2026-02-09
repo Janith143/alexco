@@ -1,6 +1,7 @@
 "use server";
 
 import { query } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 
 export async function getDeliveryRates() {
     try {
@@ -13,6 +14,12 @@ export async function getDeliveryRates() {
 }
 
 export async function updateDeliveryRates(rates: any[]) {
+    try {
+        await requirePermission('admin.settings');
+    } catch (e) {
+        return { error: 'Unauthorized' };
+    }
+
     const { v4: uuidv4 } = await import('uuid');
 
     try {

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, TrendingUp, Users, ShoppingCart } from "lucide-react";
+import { AlertCircle, TrendingUp, Users, ShoppingCart, Wallet } from "lucide-react";
 import InventoryAlerts from "@/components/admin/InventoryAlerts";
 import { getDashboardStats } from "@/server-actions/admin/dashboard";
 
@@ -75,6 +75,12 @@ export default async function AdminDashboardPage() {
                         <CardTitle>HR & Employees</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
+                        <Link href="/paths/HR">
+                            <Button variant="outline" className="w-full justify-start gap-2 bg-blue-50/50 hover:bg-blue-50 border-blue-100">
+                                <Wallet className="h-4 w-4 text-blue-600" />
+                                Payroll Engine
+                            </Button>
+                        </Link>
                         <Link href="/paths/HR/leave">
                             <Button variant="outline" className="w-full justify-start gap-2">
                                 <Calendar className="h-4 w-4" />

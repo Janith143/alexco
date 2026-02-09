@@ -157,3 +157,19 @@ export async function getTicketHistory(ticketId: string) {
     `, [ticketId]) as any[];
     return rows;
 }
+
+export async function deleteTicket(id: string) {
+    try {
+        // Delete history
+        await query(`DELETE FROM ticket_history WHERE ticket_id = ?`, [id]);
+        // Delete items
+        await query(`DELETE FROM ticket_items WHERE ticket_id = ?`, [id]);
+        // Delete ticket
+        await query(`DELETE FROM tickets WHERE id = ?`, [id]);
+
+        return { success: true };
+    } catch (err) {
+        console.error("Error deleting ticket:", err);
+        return { success: false, error: "Failed to delete ticket" };
+    }
+}

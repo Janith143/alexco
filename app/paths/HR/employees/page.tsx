@@ -5,13 +5,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getEmployees, createEmployee } from "@/server-actions/hr/employees";
+import { getRoles } from "@/server-actions/roles";
 import { Plus, Search, Users, Building, UserCheck, UserX } from "lucide-react";
 
 const DEPARTMENTS = ['retail', 'solar', 'repair', 'admin', 'hr', 'accounts'];
-const ROLES = ['STORE_MANAGER', 'CASHIER', 'TECHNICIAN', 'ADMIN', 'HR_STAFF', 'ACCOUNTANT', 'DRIVER', 'HELPER'];
 
 export default function EmployeesPage() {
     const [employees, setEmployees] = useState<any[]>([]);
+    const [roles, setRoles] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [department, setDepartment] = useState('all');
@@ -19,15 +20,19 @@ export default function EmployeesPage() {
     const [showForm, setShowForm] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
 
-    async function loadEmployees() {
+    async function loadData() {
         setLoading(true);
-        const data = await getEmployees(search, department, status);
-        setEmployees(data);
+        const [empData, rolesData] = await Promise.all([
+            getEmployees(search, department, status),
+            getRoles()
+        ]);
+        setEmployees(empData);
+        setRoles(rolesData);
         setLoading(false);
     }
 
     useEffect(() => {
-        loadEmployees();
+        loadData();
     }, [search, department, status]);
 
     async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
@@ -42,7 +47,7 @@ export default function EmployeesPage() {
             setFormError(result.error);
         } else {
             setShowForm(false);
-            loadEmployees();
+            loadData();
         }
     }
 
@@ -141,7 +146,7 @@ export default function EmployeesPage() {
                                 <label className="block text-sm font-medium mb-1">Role *</label>
                                 <select name="role" required className="w-full px-3 py-2 border rounded-lg">
                                     <option value="">Select</option>
-                                    {ROLES.map(r => <option key={r} value={r}>{r.replace('_', ' ')}</option>)}
+                                    {roles.map(r => <option key={r.id} value={r.slug.toUpperCase().replace('-', '_')}>{r.name}</option>)}
                                 </select>
                             </div>
                             <div>

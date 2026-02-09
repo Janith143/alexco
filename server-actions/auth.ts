@@ -14,7 +14,7 @@ import { UserRole } from "@/lib/auth-types";
 import { redirect } from "next/navigation";
 
 // Login action
-export async function login(formData: FormData): Promise<{ error?: string }> {
+export async function login(formData: FormData): Promise<{ error?: string; success?: boolean; role?: string }> {
     const username = formData.get('username') as string;
     const password = formData.get('password') as string;
 
@@ -24,8 +24,11 @@ export async function login(formData: FormData): Promise<{ error?: string }> {
 
     // Find user
     const rows = await query(
-        `SELECT id, username, password_hash, full_name, email, role, is_active 
-         FROM users WHERE username = ?`,
+        `SELECT u.id, u.username, u.password_hash, u.full_name, u.email, u.is_active,
+                COALESCE(r.slug, u.role) as role
+         FROM users u
+         LEFT JOIN roles r ON u.role_id = r.id
+         WHERE u.username = ?`,
         [username]
     ) as any[];
 
@@ -52,7 +55,8 @@ export async function login(formData: FormData): Promise<{ error?: string }> {
         role: user.role
     });
 
-    return {};
+    console.log('Login successful for:', username, 'Role:', user.role);
+    return { success: true, role: user.role };
 }
 
 // Logout action
@@ -80,6 +84,7 @@ export async function createUser(formData: FormData): Promise<{ error?: string; 
     const fullName = formData.get('fullName') as string;
     const email = formData.get('email') as string;
     const role = formData.get('role') as UserRole;
+    const manualEmployeeId = formData.get('employeeId') as string; // Optional manual link
 
     if (!username || !password || !fullName || !role) {
         return { error: 'All required fields must be filled' };
@@ -103,10 +108,33 @@ export async function createUser(formData: FormData): Promise<{ error?: string; 
     const passwordHash = await hashPassword(password);
     const userId = crypto.randomUUID();
 
+    // Auto-link Logic
+    let employeeId = null;
+
+    // 0. Manual Employee ID (highest priority)
+    if (manualEmployeeId) {
+        const [emp] = await query(`SELECT id FROM employees WHERE id = ?`, [manualEmployeeId]) as any[];
+        if (emp) employeeId = emp.id;
+    }
+
+    // 1. Try email match
+    if (!employeeId && email) {
+        const [empByEmail] = await query(`SELECT id FROM employees WHERE email = ?`, [email]) as any[];
+        if (empByEmail) employeeId = empByEmail.id;
+    }
+
+    // 2. Try exact name match if no email match
+    if (!employeeId) {
+        const empsByName = await query(`SELECT id FROM employees WHERE full_name = ?`, [fullName]) as any[];
+        if (empsByName.length === 1) {
+            employeeId = empsByName[0].id;
+        }
+    }
+
     await query(
-        `INSERT INTO users (id, username, password_hash, full_name, email, role, created_by) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [userId, username, passwordHash, fullName, email || null, role, currentUser.id]
+        `INSERT INTO users (id, username, password_hash, full_name, email, role, created_by, employee_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [userId, username, passwordHash, fullName, email || null, role, currentUser.id, employeeId]
     );
 
     return { success: true };

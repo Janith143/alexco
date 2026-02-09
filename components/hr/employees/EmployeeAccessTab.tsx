@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Key, User } from "lucide-react";
+import { Key, User, Loader2 } from "lucide-react";
+import { getRoles } from "@/server-actions/roles";
 
 interface EmployeeAccessTabProps {
     userAccount: any;
@@ -9,6 +11,26 @@ interface EmployeeAccessTabProps {
 }
 
 export function EmployeeAccessTab({ userAccount, employee, handleCreateUser }: EmployeeAccessTabProps) {
+    const [roles, setRoles] = useState<any[]>([]);
+    const [loadingRoles, setLoadingRoles] = useState(false);
+
+    useEffect(() => {
+        if (!userAccount) {
+            async function fetchRoles() {
+                setLoadingRoles(true);
+                try {
+                    const data = await getRoles();
+                    setRoles(data);
+                } catch (error) {
+                    console.error("Failed to fetch roles", error);
+                } finally {
+                    setLoadingRoles(false);
+                }
+            }
+            fetchRoles();
+        }
+    }, [userAccount]);
+
     return (
         <Card>
             <CardHeader>
@@ -56,13 +78,24 @@ export function EmployeeAccessTab({ userAccount, employee, handleCreateUser }: E
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">Role</label>
-                                    <select name="role" required className="w-full px-3 py-2 border rounded-md">
-                                        <option value="user">Standard User</option>
-                                        <option value="hr_manager">HR Manager</option>
-                                        <option value="admin">Admin</option>
-                                    </select>
+                                    {loadingRoles ? (
+                                        <div className="flex items-center gap-2 text-slate-500 text-sm">
+                                            <Loader2 className="h-4 w-4 animate-spin" /> Loading roles...
+                                        </div>
+                                    ) : (
+                                        <select name="role" required className="w-full px-3 py-2 border rounded-md">
+                                            <option value="">Select Role</option>
+                                            {roles.map(r => (
+                                                <option key={r.id} value={r.slug.toUpperCase().replace('-', '_')}>
+                                                    {r.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
                                 </div>
-                                <Button type="submit">Create User Account</Button>
+                                <Button type="submit" disabled={loadingRoles || roles.length === 0}>
+                                    Create User Account
+                                </Button>
                             </form>
                         </div>
                     </div>

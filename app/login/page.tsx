@@ -16,33 +16,35 @@ export default function LoginPage() {
 
         const formData = new FormData(e.currentTarget);
         const result = await login(formData);
+        console.log('Login result:', result);
 
         if (result.error) {
             setError(result.error);
             setLoading(false);
-        } else if (result.success && result.role) {
-            // Role-based redirection
-            switch (result.role) {
-                case 'technician':
-                case 'repair_admin':
-                    router.push('/paths/Ticket');
-                    break;
-                case 'cashier':
-                    router.push('/paths/POS');
-                    break;
-                case 'hr_staff':
-                    router.push('/paths/HR');
-                    break;
-                case 'ecommerce_admin':
-                    // Assuming they manage store products which might be in admin inventory or separate
-                    router.push('/paths/admin/inventory');
-                    break;
-                default:
-                    // Super User, Admin, Manager, Accountant
-                    router.push('/paths/admin');
-                    break;
+        } else if (result.success) {
+            // Permission-based redirection
+            const permissions = result.permissions || [];
+            let targetPath = '/';
+
+            // Redirect to the first accessible page based on permissions
+            if (permissions.includes('pos.access')) {
+                targetPath = '/paths/POS';
+            } else if (permissions.includes('tickets.manage')) {
+                targetPath = '/paths/Ticket';
+            } else if (permissions.includes('hr.view')) {
+                targetPath = '/paths/HR';
+            } else if (permissions.includes('inventory.view')) {
+                targetPath = '/paths/admin/inventory';
+            } else if (permissions.includes('admin.view')) {
+                targetPath = '/paths/admin';
             }
-            router.refresh();
+
+            console.log('Login successful. Redirecting to:', targetPath);
+
+            // Use window.location.href to force a full page reload.
+            // This ensures cookies are properly sent to the server and middleware 
+            // recognizes the new session immediately.
+            window.location.href = targetPath;
         }
     }
 

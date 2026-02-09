@@ -1,6 +1,7 @@
 "use server";
 
 import { query } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 
 export type MarginReportItem = {
     id: string;

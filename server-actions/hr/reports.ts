@@ -2,6 +2,7 @@
 
 // EPF/ETF and Bank Transfer Report Generation Logic
 import { query } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 
 // C-Form Data Structure (Monthly EPF Return)
 interface CFormRecord {
@@ -18,12 +19,18 @@ interface CFormRecord {
 
 // Generate C-Form Data
 export async function generateCFormData(month: number, year: number) {
+    try {
+        await requirePermission('payroll.manage');
+    } catch (e) {
+        throw new Error("Unauthorized: Missing payroll.manage permission");
+    }
+
     // Determine the date range for payroll
     // Assuming payroll runs from 1st to end of month
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
-
+    // ... (rest of the function as before)
     const sql = `
         SELECT 
             e.epf_number, e.nic_number, e.gender, e.name_with_initials, e.full_name,
@@ -75,22 +82,31 @@ export async function generateCFormData(month: number, year: number) {
 // Real format depends on strict CBSL specs (fixed width or CSV)
 // Implementing a standard CSV format here which is commonly accepted for upload
 export async function generateCFormText(month: number, year: number) {
-    const data = await generateCFormData(month, year);
+    // Permission check is handled in generateCFormData
+    return await (async () => {
+        const data = await generateCFormData(month, year);
 
-    // Header
-    const header = `C-FORM,${year},${month}`;
+        // Header
+        const header = `C-FORM,${year},${month}`;
 
-    // Body
-    const lines = data.map(r =>
-        `${r.epfNumber},${r.nicNumber},${r.surname},${r.initials},${r.totalEarnings.toFixed(2)},${r.epfEmployee.toFixed(2)},${r.epfEmployer.toFixed(2)},${r.totalContribution.toFixed(2)}`
-    );
+        // Body
+        const lines = data.map(r =>
+            `${r.epfNumber},${r.nicNumber},${r.surname},${r.initials},${r.totalEarnings.toFixed(2)},${r.epfEmployee.toFixed(2)},${r.epfEmployer.toFixed(2)},${r.totalContribution.toFixed(2)}`
+        );
 
-    return [header, ...lines].join('\n');
+        return [header, ...lines].join('\n');
+    })();
 }
 
 // Generate Bank Transfer Text File (Common SLIPS format logic)
 // Format: AccountNo, Amount, Name, BankCode, BranchCode
 export async function generateBankTransferFile(month: number, year: number, bankType: 'BOC' | 'SAMPATH' | 'COMMERCIAL') {
+    try {
+        await requirePermission('payroll.manage');
+    } catch (e) {
+        throw new Error("Unauthorized: Missing payroll.manage permission");
+    }
+
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
@@ -128,24 +144,57 @@ export async function generateBankTransferFile(month: number, year: number, bank
 
 // Get Payroll Summary for Reports
 export async function getPayrollSummary(month: number, year: number) {
+    try {
+        await requirePermission('payroll.view');
+    } catch (e) {
+        throw new Error("Unauthorized: Missing payroll.view permission");
+    }
+
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const lastDay = new Date(year, month, 0).getDate();
     const endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
 
-    const [totals] = await query(`
-        SELECT 
-            SUM(basic_earnings) as total_basic,
-            SUM(allowances) as total_allowances,
-            SUM(ot_pay) as total_ot,
-            SUM(epf_employee) as total_epf_emp,
-            SUM(epf_employer) as total_epf_employer,
-            SUM(etf_employer) as total_etf,
-            SUM(apit_tax) as total_tax,
-            SUM(net_salary) as total_net,
-            COUNT(*) as employee_count
-        FROM payroll_runs
-        WHERE period_start >= ? AND period_end <= ?
-    `, [startDate, endDate]) as any[];
+    try {
+        const [totals] = await query(`
+            SELECT 
+                COALESCE(SUM(basic_earnings), 0) as total_basic,
+                COALESCE(SUM(allowances), 0) as total_allowances,
+                COALESCE(SUM(ot_pay), 0) as total_ot,
+                COALESCE(SUM(epf_employee), 0) as total_epf_emp,
+                COALESCE(SUM(epf_employer), 0) as total_epf_employer,
+                COALESCE(SUM(etf_employer), 0) as total_etf,
+                COALESCE(SUM(apit_tax), 0) as total_tax,
+                COALESCE(SUM(net_salary), 0) as total_net,
+                COUNT(*) as employee_count
+            FROM payroll_runs
+            WHERE period_start >= ? AND period_end <= ?
+        `, [startDate, endDate]) as any[];
 
-    return totals;
+        return totals || {
+            total_basic: 0,
+            total_allowances: 0,
+            total_ot: 0,
+            total_epf_emp: 0,
+            total_epf_employer: 0,
+            total_etf: 0,
+            total_tax: 0,
+            total_net: 0,
+            employee_count: 0
+        };
+    } catch (error: any) {
+        // Table might not exist or other DB error
+        console.error("Payroll Summary Error:", error.message);
+        return {
+            total_basic: 0,
+            total_allowances: 0,
+            total_ot: 0,
+            total_epf_emp: 0,
+            total_epf_employer: 0,
+            total_etf: 0,
+            total_tax: 0,
+            total_net: 0,
+            employee_count: 0,
+            error: "Payroll data not available. Run payroll first."
+        };
+    }
 }
