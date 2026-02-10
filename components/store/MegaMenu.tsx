@@ -65,12 +65,10 @@ export default function MegaMenu() {
                                                 >
                                                     {category.image ? (
                                                         <div className="relative h-12 w-12 rounded-md overflow-hidden mb-3 border border-slate-100">
-                                                            <Image
+                                                            <img
                                                                 src={category.image}
                                                                 alt={category.name}
-                                                                fill
-                                                                className="object-cover"
-                                                                sizes="48px"
+                                                                className="w-full h-full object-cover"
                                                             />
                                                         </div>
                                                     ) : (
