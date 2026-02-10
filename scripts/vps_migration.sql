@@ -1,14 +1,44 @@
--- 1. Fix Employees Table Schema
--- Add missing columns if they don't exist
-ALTER TABLE employees 
-ADD COLUMN IF NOT EXISTS epf_employee_rate DECIMAL(5,2) DEFAULT 8.00,
-ADD COLUMN IF NOT EXISTS epf_employer_rate DECIMAL(5,2) DEFAULT 12.00,
-ADD COLUMN IF NOT EXISTS etf_employer_rate DECIMAL(5,2) DEFAULT 3.00,
-ADD COLUMN IF NOT EXISTS epf_number VARCHAR(50),
-ADD COLUMN IF NOT EXISTS etf_number VARCHAR(50);
+-- Fix for older MySQL versions that don't support IF NOT EXISTS in ALTER TABLE
+
+DROP PROCEDURE IF EXISTS AddColumnIfNotExists;
+
+DELIMITER //
+
+CREATE PROCEDURE AddColumnIfNotExists(
+    IN tableName VARCHAR(255),
+    IN colName VARCHAR(255),
+    IN colDef VARCHAR(255)
+)
+BEGIN
+    DECLARE colCount INT;
+    
+    SELECT COUNT(*) INTO colCount 
+    FROM information_schema.columns 
+    WHERE table_name = tableName 
+    AND column_name = colName 
+    AND table_schema = DATABASE();
+    
+    IF colCount = 0 THEN
+        SET @sql = CONCAT('ALTER TABLE ', tableName, ' ADD COLUMN ', colName, ' ', colDef);
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+END //
+
+DELIMITER ;
+
+-- 1. Add missing columns to employees
+CALL AddColumnIfNotExists('employees', 'epf_employee_rate', 'DECIMAL(5,2) DEFAULT 8.00');
+CALL AddColumnIfNotExists('employees', 'epf_employer_rate', 'DECIMAL(5,2) DEFAULT 12.00');
+CALL AddColumnIfNotExists('employees', 'etf_employer_rate', 'DECIMAL(5,2) DEFAULT 3.00');
+CALL AddColumnIfNotExists('employees', 'epf_number', 'VARCHAR(50)');
+CALL AddColumnIfNotExists('employees', 'etf_number', 'VARCHAR(50)');
+
+-- Cleanup
+DROP PROCEDURE AddColumnIfNotExists;
 
 -- 2. Insert Missing Permissions
--- using INSERT IGNORE to avoid duplicates
 INSERT IGNORE INTO permissions (id, description) VALUES 
 ('categories.manage', 'Manage Categories'),
 ('inventory.view', 'View Inventory'),
@@ -19,7 +49,6 @@ INSERT IGNORE INTO permissions (id, description) VALUES
 ('reports.view', 'View Reports');
 
 -- 3. Assign Permissions to Roles (Admin & Super User)
--- We use a stored procedure or just simple INSERT SELECTs to be safe against different UUIDs
 INSERT IGNORE INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
