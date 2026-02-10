@@ -33,15 +33,15 @@ export default function FeaturesSection() {
     return (
         <section className="py-12 bg-white border-b border-slate-100">
             <div className="container mx-auto px-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                     {features.map((feature, idx) => (
-                        <div key={idx} className="flex items-start gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors group cursor-default">
-                            <div className={`h-12 w-12 rounded-full flex items-center justify-center flex-shrink-0 ${feature.color}`}>
-                                <feature.icon className="h-6 w-6" />
+                        <div key={idx} className="flex items-start gap-3 sm:gap-4 p-2 sm:p-4 rounded-xl hover:bg-slate-50 transition-colors group cursor-default">
+                            <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center flex-shrink-0 ${feature.color}`}>
+                                <feature.icon className="h-5 w-5 sm:h-6 sm:w-6" />
                             </div>
                             <div>
-                                <h3 className="font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">{feature.title}</h3>
-                                <p className="text-sm text-slate-500 leading-relaxed">{feature.description}</p>
+                                <h3 className="font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors text-sm sm:text-base">{feature.title}</h3>
+                                <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">{feature.description}</p>
                             </div>
                         </div>
                     ))}

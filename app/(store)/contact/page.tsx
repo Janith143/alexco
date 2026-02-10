@@ -115,7 +115,7 @@ export default function ContactPage() {
                 </div>
 
                 {/* Contact Form */}
-                <div className="md:col-span-2 bg-white rounded-2xl border border-slate-200 p-8 shadow-sm">
+                <div className="md:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-8 shadow-sm">
                     {submitted ? (
                         <div className="text-center py-12">
                             <div className="bg-green-50 p-6 rounded-full h-20 w-20 mx-auto flex items-center justify-center mb-6">
@@ -207,7 +207,7 @@ export default function ContactPage() {
             </div>
 
             {/* Map Section */}
-            <div className="mt-16 rounded-2xl overflow-hidden border border-slate-200 shadow-sm h-[400px] bg-slate-100 relative">
+            <div className="mt-10 md:mt-16 rounded-2xl overflow-hidden border border-slate-200 shadow-sm h-[280px] md:h-[400px] bg-slate-100 relative">
                 <iframe
                     src="https://maps.google.com/maps?q=7.013340473175049,79.96552276611328&t=&z=15&ie=UTF8&iwloc=&output=embed"
                     width="100%"

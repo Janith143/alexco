@@ -118,7 +118,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
     return (
         <div className="container mx-auto px-4 py-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
                 {/* Gallery Section */}
                 <ProductGallery images={product.images} name={product.name} />
 
@@ -138,7 +138,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                     </div>
 
                     {/* Price Block */}
-                    <div className="flex items-baseline gap-4 mt-6">
+                    <div className="flex items-baseline gap-2 sm:gap-4 flex-wrap mt-6">
                         {product.price_sale > 0 && product.price_sale < product.price_retail ? (
                             <>
                                 <span className="text-3xl font-bold text-red-600">
@@ -195,10 +195,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             {/* Detailed Tabs Section */}
             <div className="mt-16">
                 <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex bg-slate-100 p-1 mb-8">
-                        <TabsTrigger value="overview" className="px-8 py-2.5 text-base">Overview</TabsTrigger>
-                        <TabsTrigger value="specs" className="px-8 py-2.5 text-base">Specifications</TabsTrigger>
-                        <TabsTrigger value="box" className="px-8 py-2.5 text-base">In the Box</TabsTrigger>
+                    <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex bg-slate-100 p-1 mb-6 sm:mb-8">
+                        <TabsTrigger value="overview" className="px-3 sm:px-8 py-2 sm:py-2.5 text-xs sm:text-base">Overview</TabsTrigger>
+                        <TabsTrigger value="specs" className="px-3 sm:px-8 py-2 sm:py-2.5 text-xs sm:text-base">Specifications</TabsTrigger>
+                        <TabsTrigger value="box" className="px-3 sm:px-8 py-2 sm:py-2.5 text-xs sm:text-base">In the Box</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
@@ -230,27 +230,29 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
                     <TabsContent value="specs" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
                         <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-slate-50 text-slate-900 font-semibold border-b border-slate-200">
-                                    <tr>
-                                        <th className="px-6 py-4 w-1/3">Specification</th>
-                                        <th className="px-6 py-4">Detail</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-100">
-                                    {product.specs && Object.entries(product.specs).map(([key, val]) => (
-                                        <tr key={key} className="hover:bg-slate-50/50">
-                                            <td className="px-6 py-4 font-medium text-slate-600">{key}</td>
-                                            <td className="px-6 py-4 text-slate-900">{String(val)}</td>
-                                        </tr>
-                                    ))}
-                                    {!product.specs && (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left min-w-[400px]">
+                                    <thead className="bg-slate-50 text-slate-900 font-semibold border-b border-slate-200">
                                         <tr>
-                                            <td colSpan={2} className="px-6 py-8 text-center text-slate-400">No specifications available.</td>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4 w-1/3">Specification</th>
+                                            <th className="px-4 sm:px-6 py-3 sm:py-4">Detail</th>
                                         </tr>
-                                    )}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-100">
+                                        {product.specs && Object.entries(product.specs).map(([key, val]) => (
+                                            <tr key={key} className="hover:bg-slate-50/50">
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4 font-medium text-slate-600">{key}</td>
+                                                <td className="px-4 sm:px-6 py-3 sm:py-4 text-slate-900">{String(val)}</td>
+                                            </tr>
+                                        ))}
+                                        {!product.specs && (
+                                            <tr>
+                                                <td colSpan={2} className="px-4 sm:px-6 py-8 text-center text-slate-400">No specifications available.</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </TabsContent>
 

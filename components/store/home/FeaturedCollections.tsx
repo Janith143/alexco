@@ -45,13 +45,13 @@ export default function FeaturedCollections() {
 
             <Tabs defaultValue="bestsellers" className="w-full text-center">
                 <TabsList className="mb-12 inline-flex relative h-10 items-center justify-center rounded-md bg-slate-100 p-1 text-slate-500">
-                    <TabsTrigger value="bestsellers" className="px-8">Best Sellers</TabsTrigger>
-                    <TabsTrigger value="new" className="px-8">New Arrivals</TabsTrigger>
-                    <TabsTrigger value="onsale" className="px-8">On Sale</TabsTrigger>
+                    <TabsTrigger value="bestsellers" className="px-4 sm:px-8 text-xs sm:text-sm">Best Sellers</TabsTrigger>
+                    <TabsTrigger value="new" className="px-4 sm:px-8 text-xs sm:text-sm">New Arrivals</TabsTrigger>
+                    <TabsTrigger value="onsale" className="px-4 sm:px-8 text-xs sm:text-sm">On Sale</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="bestsellers" className="space-y-4 text-left">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                         {bestSellers.map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
@@ -59,7 +59,7 @@ export default function FeaturedCollections() {
                 </TabsContent>
 
                 <TabsContent value="new" className="space-y-4 text-left">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                         {newArrivals.map((product) => (
                             <ProductCard key={product.id} product={product} />
                         ))}
@@ -67,7 +67,7 @@ export default function FeaturedCollections() {
                 </TabsContent>
 
                 <TabsContent value="onsale" className="space-y-4 text-left">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                         {onSale.length > 0 ? onSale.map((product) => (
                             <ProductCard key={product.id} product={product} />
                         )) : (

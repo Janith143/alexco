@@ -63,32 +63,41 @@ export async function createEmployee(data: any) {
     const count = countResult[0].count + 1;
     const employeeNumber = `EMP-${String(count).padStart(4, '0')}`;
 
-    await query(`
-        INSERT INTO employees (
-            id, employee_number, full_name, name_with_initials, nic_number,
-            date_of_birth, gender, marital_status,
-            address_line1, address_line2, city, district, postal_code,
-            phone_mobile, phone_home, email,
-            emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
-            department, designation, role, employment_type, joined_date,
-            basic_salary, fixed_allowances,
-            bank_name, bank_branch, bank_account_number, bank_account_name,
-            bank_name, bank_branch, bank_account_number, bank_account_name,
-            epf_number, etf_number,
-            epf_employee_rate, epf_employer_rate, etf_employer_rate
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [
-        id, employeeNumber, data.full_name || null, data.name_with_initials || null, data.nic_number || null,
-        data.date_of_birth || null, data.gender || null, data.marital_status || null,
-        data.address_line1 || null, data.address_line2 || null, data.city || null, data.district || null, data.postal_code || null,
-        data.phone_mobile || null, data.phone_home || null, data.email || null,
-        data.emergency_contact_name || null, data.emergency_contact_phone || null, data.emergency_contact_relation || null,
-        data.department || null, data.designation || null, data.role || 'staff', data.employment_type || 'permanent', data.joined_date || null,
-        data.basic_salary || 0, data.fixed_allowances || 0,
-        data.bank_name || null, data.bank_branch || null, data.bank_account_number || null, data.bank_account_name || null,
-        data.epf_number || null, data.etf_number || null,
-        data.epf_employee_rate || 0.08, data.epf_employer_rate || 0.12, data.etf_employer_rate || 0.03
-    ]);
+    try {
+        await query(`
+            INSERT INTO employees (
+                id, employee_number, full_name, name_with_initials, nic_number,
+                date_of_birth, gender, marital_status,
+                address_line1, address_line2, city, district, postal_code,
+                phone_mobile, phone_home, email,
+                emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
+                department, designation, role, employment_type, joined_date,
+                basic_salary, fixed_allowances,
+                bank_name, bank_branch, bank_account_number, bank_account_name,
+                epf_number, etf_number,
+                epf_employee_rate, epf_employer_rate, etf_employer_rate
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+            id, employeeNumber, data.full_name || null, data.name_with_initials || null, data.nic_number || null,
+            data.date_of_birth || null, data.gender || null, data.marital_status || null,
+            data.address_line1 || null, data.address_line2 || null, data.city || null, data.district || null, data.postal_code || null,
+            data.phone_mobile || null, data.phone_home || null, data.email || null,
+            data.emergency_contact_name || null, data.emergency_contact_phone || null, data.emergency_contact_relation || null,
+            data.department || null, data.designation || null, data.role || 'staff', data.employment_type || 'permanent', data.joined_date || null,
+            data.basic_salary || 0, data.fixed_allowances || 0,
+            data.bank_name || null, data.bank_branch || null, data.bank_account_number || null, data.bank_account_name || null,
+            data.epf_number || null, data.etf_number || null,
+            data.epf_employee_rate || 0.08, data.epf_employer_rate || 0.12, data.etf_employer_rate || 0.03
+        ]);
+    } catch (err: any) {
+        if (err?.message?.includes('Duplicate entry') && err?.message?.includes('nic_number')) {
+            return { error: 'An employee with this NIC number already exists.' };
+        }
+        if (err?.message?.includes('Duplicate entry')) {
+            return { error: 'A duplicate record was found. Please check the details and try again.' };
+        }
+        return { error: 'Failed to create employee. Please try again.' };
+    }
 
     return { success: true, id, employeeNumber };
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ShoppingCart, Bolt } from "lucide-react";
+import { ShoppingCart, Bolt, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,7 @@ export default function ProductActions({ product }: ProductActionsProps) {
 
     const [selectedVariations, setSelectedVariations] = useState<Record<string, string>>({});
     const [missingSelection, setMissingSelection] = useState<string | null>(null);
+    const [quantity, setQuantity] = useState(1);
 
     // Initialize default selections if needed, or leave empty to force user choice
     // For now, let's force user choice if variations exist.
@@ -59,7 +60,7 @@ export default function ProductActions({ product }: ProductActionsProps) {
             productId: product.id,
             name: product.name,
             price: product.price,
-            quantity: 1,
+            quantity: quantity,
             image: product.image || "/placeholder.jpg",
             variations: selectedVariations
         });
@@ -108,6 +109,29 @@ export default function ProductActions({ product }: ProductActionsProps) {
                     ))}
                 </div>
             )}
+
+            {/* Quantity Selector */}
+            <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-slate-700">Quantity:</span>
+                <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
+                    <button
+                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                        className="h-10 w-10 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                        disabled={quantity <= 1}
+                    >
+                        <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="w-12 text-center font-semibold text-slate-900 border-x border-slate-200">{quantity}</span>
+                    <button
+                        onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                        className="h-10 w-10 flex items-center justify-center text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors"
+                        disabled={quantity >= product.stock}
+                    >
+                        <Plus className="h-4 w-4" />
+                    </button>
+                </div>
+            </div>
+
 
             <div className="grid grid-cols-2 gap-4">
                 <Button

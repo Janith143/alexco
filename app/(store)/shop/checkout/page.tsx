@@ -225,7 +225,7 @@ export default function CheckoutPage() {
                                             const weight = itemWeights[key];
                                             return weight ? (
                                                 <div key={idx} className="flex justify-between text-slate-600">
-                                                    <span className="truncate max-w-[200px]">{item.name} x{item.quantity}</span>
+                                                    <span className="truncate flex-1 min-w-0">{item.name} x{item.quantity}</span>
                                                     <span className="font-medium">{(weight.lineWeight / 1000).toFixed(2)}kg</span>
                                                 </div>
                                             ) : null;
@@ -317,7 +317,7 @@ export default function CheckoutPage() {
 
                 {/* Order Summary */}
                 <div className="lg:col-span-1">
-                    <Card className="sticky top-20">
+                    <Card className="lg:sticky lg:top-20">
                         <CardHeader>
                             <CardTitle>Order Summary</CardTitle>
                         </CardHeader>

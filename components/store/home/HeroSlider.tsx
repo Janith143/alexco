@@ -49,7 +49,7 @@ export default function HeroSlider() {
     const prevSlide = () => setCurrent((prev) => (prev - 1 + slides.length) % slides.length);
 
     return (
-        <div className="relative h-[400px] md:h-[500px] w-full overflow-hidden bg-slate-900 group">
+        <div className="relative h-[280px] sm:h-[400px] md:h-[500px] w-full overflow-hidden bg-slate-900 group">
             {slides.map((slide, index) => (
                 <div
                     key={slide.id}
@@ -65,15 +65,15 @@ export default function HeroSlider() {
                     </div>
 
                     <div className="container mx-auto px-4 h-full flex items-center relative z-10">
-                        <div className="max-w-xl space-y-6 animate-in slide-in-from-left-10 duration-700 fade-in">
-                            <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight">
+                        <div className="max-w-xl space-y-3 sm:space-y-6 animate-in slide-in-from-left-10 duration-700 fade-in">
+                            <h2 className="text-2xl sm:text-4xl md:text-6xl font-bold text-white leading-tight">
                                 {slide.title}
                             </h2>
-                            <p className="text-lg md:text-xl text-slate-200">
+                            <p className="text-sm sm:text-lg md:text-xl text-slate-200">
                                 {slide.subtitle}
                             </p>
                             <Link href={slide.link}>
-                                <Button size="lg" className={`${slide.color} border-none text-white hover:opacity-90 h-12 px-8 text-lg rounded-full`}>
+                                <Button size="lg" className={`${slide.color} border-none text-white hover:opacity-90 h-10 sm:h-12 px-5 sm:px-8 text-sm sm:text-lg rounded-full`}>
                                     {slide.cta} <ChevronRight className="ml-2 h-5 w-5" />
                                 </Button>
                             </Link>
@@ -85,17 +85,17 @@ export default function HeroSlider() {
             {/* Navigation Arrows */}
             <button
                 onClick={prevSlide}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 sm:bg-white/10 hover:bg-white/30 text-white p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all sm:opacity-0 sm:group-hover:opacity-100"
                 aria-label="Previous Slide"
             >
-                <ChevronLeft className="h-8 w-8" />
+                <ChevronLeft className="h-5 w-5 sm:h-8 sm:w-8" />
             </button>
             <button
                 onClick={nextSlide}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 sm:bg-white/10 hover:bg-white/30 text-white p-1.5 sm:p-2 rounded-full backdrop-blur-sm transition-all sm:opacity-0 sm:group-hover:opacity-100"
                 aria-label="Next Slide"
             >
-                <ChevronRight className="h-8 w-8" />
+                <ChevronRight className="h-5 w-5 sm:h-8 sm:w-8" />
             </button>
 
             {/* Indicators */}
