@@ -66,6 +66,26 @@ async function checkSchema() {
         });
     }
 
+    // Check Roles & Permissions
+    console.log("\n--- Roles & Permissions Diagnostics ---");
+
+    // 1. Roles
+    const [roles] = await connection.execute('SELECT * FROM roles');
+    console.table(roles);
+
+    // 2. Permissions
+    const [permissions] = await connection.execute('SELECT * FROM permissions');
+    console.table(permissions);
+
+    // 3. Role Permissions
+    const [rolePerms] = await connection.execute(`
+        SELECT r.name as Role, p.id as Permission 
+        FROM role_permissions rp 
+        JOIN roles r ON rp.role_id = r.id 
+        JOIN permissions p ON rp.permission_id = p.id
+    `);
+    console.table(rolePerms);
+
     connection.end();
 }
 
