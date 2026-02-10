@@ -11,6 +11,7 @@ export async function getPosProducts() {
         p.price_retail as price, 
         p.category_path as category, 
         p.sku,
+        p.image,
         COALESCE(SUM(l.delta), 0) as stock_qty
       FROM products p
       LEFT JOIN inventory_ledger l ON p.id = l.product_id
@@ -25,6 +26,7 @@ export async function getPosProducts() {
             price: Number(p.price),
             category: p.category,
             sku: p.sku,
+            image: p.image,
             stock: Number(p.stock_qty) || 0
         }));
     } catch (err) {

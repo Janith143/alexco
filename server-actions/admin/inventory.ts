@@ -80,6 +80,7 @@ export async function getInventoryList(search?: string) {
         throw new Error("Unauthorized: Missing inventory.view permission");
     }
 
+    // Simplified query to ensure we catch all stock including variants
     let sql = `
         SELECT 
             p.id, p.sku, p.name, p.category_path, p.price_retail, p.price_cost, p.price_sale,
@@ -100,6 +101,9 @@ export async function getInventoryList(search?: string) {
     sql += ` GROUP BY p.id ORDER BY p.name ASC LIMIT 50`;
 
     const rows = await query(sql, params) as any[];
+    // verify stock count to be safe
+    rows.forEach(r => r.current_stock = Number(r.current_stock));
+
     return rows;
 }
 
@@ -187,7 +191,7 @@ export async function createProduct(data: any) {
     }
 }
 
-export async function adjustStock(productId: string, delta: number, reason: string) {
+export async function adjustStock(productId: string, delta: number, reason: string, variantId?: string) {
     try {
         await requirePermission('inventory.manage');
     } catch (e) {
@@ -196,21 +200,54 @@ export async function adjustStock(productId: string, delta: number, reason: stri
 
     const { v4: uuidv4 } = await import('uuid');
     try {
-        const [loc] = await query("SELECT id FROM locations LIMIT 1") as any[];
-        if (!loc) return { error: 'No location configured' };
+        let [loc] = await query("SELECT id FROM locations LIMIT 1") as any[];
+
+        // Auto-create location if missing (Fix for empty locations table)
+        if (!loc) {
+            const locId = uuidv4();
+            await query("INSERT INTO locations (id, name, address) VALUES (?, ?, ?)", [locId, 'Main Store', 'Default Address']);
+            loc = { id: locId };
+        }
+
+        const locId = loc.id;
 
         await query(`
-            INSERT INTO inventory_ledger (transaction_id, product_id, location_id, delta, reason_code, reference_doc)
-            VALUES (?, ?, ?, ?, ?, 'ADMIN_ADJ')
-        `, [uuidv4(), productId, loc.id, delta, reason]);
+            INSERT INTO inventory_ledger (transaction_id, product_id, location_id, delta, reason_code, reference_doc, variant_id)
+            VALUES (?, ?, ?, ?, ?, 'ADMIN_ADJ', ?)
+        `, [uuidv4(), productId, loc.id, delta, reason, variantId || null]);
 
         const { revalidatePath } = await import('next/cache');
         revalidatePath('/paths/admin/inventory');
 
         return { success: true };
-    } catch (e) {
+    } catch (e: any) {
         console.error("Stock Adjust Error:", e);
         return { error: 'Failed to adjust stock' };
+    }
+}
+
+export async function getVariantStock(productId: string) {
+    try {
+        console.log(`[getVariantStock] Fetching for ${productId}`);
+        // Just return map of variant_id -> sum(delta)
+        // variant_id can be null (for main product stock if mixed) or a string
+        const rows = await query(`
+            SELECT variant_id, SUM(delta) as stock
+            FROM inventory_ledger
+            WHERE product_id = ? AND variant_id IS NOT NULL
+            GROUP BY variant_id
+        `, [productId]) as any[];
+
+        console.log(`[getVariantStock] Rows:`, rows);
+
+        const stockMap: Record<string, number> = {};
+        rows.forEach(r => {
+            stockMap[r.variant_id] = Number(r.stock);
+        });
+        return stockMap;
+    } catch (e) {
+        console.error("Failed to get variant stock:", e);
+        return {};
     }
 }
 

@@ -61,29 +61,21 @@ export async function getCategories(includeInactive = false): Promise<Category[]
     }
 }
 
-export async function createCategory(data: any) {
+export async function createCategory(name: string, parentId?: string, image?: string) {
     try {
-        await requirePermission('inventory.categories');
-    } catch (e) {
-        return { error: 'Unauthorized' };
-    }
+        await requirePermission('categories.manage');
+        const { v4: uuidv4 } = await import('uuid');
+        const id = uuidv4();
 
-    const { name, slug, description, parent_id, image, icon, is_active, order_index } = data;
-    const id = uuidv4();
+        let slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        // simple uniqueness check could be added here
 
-    try {
-        await query(`
-            INSERT INTO categories (id, name, slug, description, parent_id, image, icon, is_active, order_index)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-            id, name, slug, description || '',
-            parent_id || null, image || null, icon || null,
-            is_active !== undefined ? is_active : true,
-            order_index || 0
-        ]);
+        await query(
+            "INSERT INTO categories (id, name, slug, parent_id, image) VALUES (?, ?, ?, ?, ?)",
+            [id, name, slug, parentId || null, image || null]
+        );
 
         revalidatePath('/paths/admin/categories');
-        revalidatePath('/shop');
         return { success: true, id };
     } catch (e: any) {
         console.error("Create Category Error:", e);
@@ -94,42 +86,28 @@ export async function createCategory(data: any) {
     }
 }
 
-export async function updateCategory(id: string, data: any) {
+export async function updateCategory(id: string, name: string, parentId?: string, image?: string) {
     try {
-        await requirePermission('inventory.categories');
-    } catch (e) {
-        return { error: 'Unauthorized' };
-    }
+        await requirePermission('categories.manage');
 
-    const { name, slug, description, parent_id, image, icon, is_active, order_index } = data;
+        let slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-    try {
-        await query(`
-            UPDATE categories 
-            SET name = ?, slug = ?, description = ?, parent_id = ?, image = ?, icon = ?, is_active = ?, order_index = ?
-            WHERE id = ?
-        `, [
-            name, slug, description,
-            parent_id || null, image || null, icon || null,
-            is_active, order_index,
-            id
-        ]);
+        await query(
+            "UPDATE categories SET name = ?, slug = ?, parent_id = ?, image = ? WHERE id = ?",
+            [name, slug, parentId || null, image || null, id]
+        );
 
         revalidatePath('/paths/admin/categories');
         revalidatePath('/shop');
         return { success: true };
     } catch (e: any) {
-        console.error("Update Category Error:", e);
-        if (e.code === 'ER_DUP_ENTRY') {
-            return { error: 'Slug already exists.' };
-        }
-        return { error: 'Failed to update category' };
+        return { error: e.message };
     }
 }
 
 export async function deleteCategory(id: string) {
     try {
-        await requirePermission('inventory.categories');
+        await requirePermission('categories.manage');
     } catch (e) {
         return { error: 'Unauthorized' };
     }
@@ -142,7 +120,7 @@ export async function deleteCategory(id: string) {
         }
 
         // Check for usage in products (optional, strict check)
-        // Since we store path string, strictly linking by ID isn't possible yet without schema change. 
+        // Since we store path string, strictly linking by ID isn't possible yet without schema change.
         // For now, we allow deletion but warn user in UI.
 
         await query(`DELETE FROM categories WHERE id = ?`, [id]);

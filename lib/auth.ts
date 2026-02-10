@@ -127,7 +127,7 @@ export async function getCurrentUser(): Promise<User | null> {
 
     // Fetch Permissions
     const permissions = await query(`
-        SELECT p.code 
+        SELECT p.id as code 
         FROM role_permissions rp
         JOIN permissions p ON rp.permission_id = p.id
         WHERE rp.role_id = ?

@@ -50,8 +50,35 @@ export async function getFilteredProducts(filters: {
         const params: any[] = [];
 
         if (category) {
-            whereClauses.push("category_path = ?");
-            params.push(category);
+            // Fetch all categories to determine hierarchy
+            // (Caching this would be better for performance, but this is safe for now)
+            const allCats = await query('SELECT id, parent_id, slug FROM categories WHERE is_active = TRUE') as any[];
+
+            const targetCat = allCats.find(c => c.slug === category);
+
+            if (targetCat) {
+                const slugsToInclude = [category];
+
+                // Find all descendants recursively
+                const findDescendants = (parentId: string) => {
+                    const children = allCats.filter(c => c.parent_id === parentId);
+                    children.forEach(child => {
+                        slugsToInclude.push(child.slug);
+                        findDescendants(child.id);
+                    });
+                };
+
+                findDescendants(targetCat.id);
+
+                // Create placeholders for prepared statement
+                const placeholders = slugsToInclude.map(() => '?').join(',');
+                whereClauses.push(`category_path IN (${placeholders})`);
+                params.push(...slugsToInclude);
+            } else {
+                // Fallback for direct match if not found in list (e.g. inactive)
+                whereClauses.push("category_path = ?");
+                params.push(category);
+            }
         }
 
         if (minPrice !== undefined) {

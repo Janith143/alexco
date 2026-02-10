@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCategories, createCategory, updateCategory, deleteCategory, Category } from "@/server-actions/admin/categories";
 import { useToast } from "@/hooks/use-toast";
+import ImageUpload from "@/components/admin/ImageUpload";
 
 export default function CategoriesPage() {
     const { toast } = useToast();
@@ -29,6 +30,7 @@ export default function CategoriesPage() {
         slug: "",
         description: "",
         parent_id: "root",
+        image: "",
         icon: "",
         is_active: true,
         order_index: 0
@@ -67,6 +69,7 @@ export default function CategoriesPage() {
             slug: category.slug,
             description: category.description,
             parent_id: category.parent_id || "root",
+            image: category.image || "",
             icon: category.icon || "",
             is_active: category.is_active,
             order_index: category.order_index
@@ -81,6 +84,7 @@ export default function CategoriesPage() {
             slug: "",
             description: "",
             parent_id: "root",
+            image: "",
             icon: "",
             is_active: true,
             order_index: 0
@@ -89,13 +93,10 @@ export default function CategoriesPage() {
     };
 
     const handleSubmit = async () => {
-        const payload = {
-            ...formData,
-            parent_id: formData.parent_id === "root" ? null : formData.parent_id
-        };
+        const parentId = formData.parent_id === "root" ? undefined : formData.parent_id;
 
         if (editingCategory) {
-            const res = await updateCategory(editingCategory.id, payload);
+            const res = await updateCategory(editingCategory.id, formData.name, parentId, formData.image);
             if (res.success) {
                 toast({ title: "Category Updated" });
                 loadCategories();
@@ -104,7 +105,7 @@ export default function CategoriesPage() {
                 toast({ title: "Error", description: res.error, variant: "destructive" });
             }
         } else {
-            const res = await createCategory(payload);
+            const res = await createCategory(formData.name, parentId, formData.image);
             if (res.success) {
                 toast({ title: "Category Created" });
                 loadCategories();
@@ -166,6 +167,7 @@ export default function CategoriesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
+                            <TableHead>Image</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Slug</TableHead>
                             <TableHead>Products</TableHead>
@@ -176,19 +178,27 @@ export default function CategoriesPage() {
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-slate-500">Loading...</TableCell>
+                                <TableCell colSpan={6} className="text-center py-8 text-slate-500">Loading...</TableCell>
                             </TableRow>
                         ) : filteredCategories.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-slate-500">No categories found.</TableCell>
+                                <TableCell colSpan={6} className="text-center py-8 text-slate-500">No categories found.</TableCell>
                             </TableRow>
                         ) : (
                             filteredCategories.map((category: any) => (
                                 <TableRow key={category.id}>
                                     <TableCell>
+                                        {category.image ? (
+                                            <img src={category.image} alt={category.name} className="h-10 w-10 object-cover rounded" />
+                                        ) : (
+                                            <div className="h-10 w-10 bg-slate-100 rounded flex items-center justify-center text-slate-300">
+                                                <Folder className="h-5 w-5" />
+                                            </div>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>
                                         <div className="flex items-center gap-2" style={{ paddingLeft: `${category.depth * 24}px` }}>
                                             {category.depth > 0 && <div className="w-4 border-b border-slate-300 mr-1 h-0"></div>}
-                                            <Folder className="h-4 w-4 text-blue-500" />
                                             <span className="font-medium">{category.name}</span>
                                         </div>
                                     </TableCell>
@@ -218,7 +228,7 @@ export default function CategoriesPage() {
 
             {/* Create/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-[500px]">
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>{editingCategory ? "Edit Category" : "Create Category"}</DialogTitle>
                         <DialogDescription>
@@ -227,6 +237,15 @@ export default function CategoriesPage() {
                     </DialogHeader>
 
                     <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label>Category Image</Label>
+                            <ImageUpload
+                                value={formData.image ? [formData.image] : []}
+                                onChange={(urls: string[]) => setFormData({ ...formData, image: urls[0] || "" })}
+                                onRemove={() => setFormData({ ...formData, image: "" })}
+                            />
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label>Name</Label>

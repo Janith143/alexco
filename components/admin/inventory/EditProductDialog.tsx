@@ -1,6 +1,8 @@
 "use client";
 
+
 import { useState, useEffect } from "react";
+import VariationStockManager from "./VariationStockManager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -47,6 +49,14 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
     const [boxItems, setBoxItems] = useState<string[]>([]);
     const [features, setFeatures] = useState<string[]>([]);
     const [gallery, setGallery] = useState<string[]>([]);
+    const [variationsRaw, setVariationsRaw] = useState("");
+
+    useEffect(() => {
+        if (product) {
+            const formatted = formatVariations(product.variations);
+            setVariationsRaw(formatted);
+        }
+    }, [product]);
 
     useEffect(() => {
         if (product) {
@@ -288,9 +298,20 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
                                 <Input name="weight_g" type="number" min="0" defaultValue={product.weight_g || 0} placeholder="e.g. 500" />
                             </div>
 
+
+
+
+                            return (
+                            // ... (surrounding code)
                             <div className="grid gap-2 p-3 bg-slate-50 rounded-md border text-sm">
                                 <label className="font-semibold text-slate-700">Variations</label>
-                                <Input name="variations_raw" placeholder="Color=Red,Blue; Size=Small,Large" defaultValue={formatVariations(product.variations)} />
+                                <Input
+                                    name="variations_raw"
+                                    placeholder="Color=Red,Blue; Size=Small,Large"
+                                    value={variationsRaw}
+                                    onChange={(e) => setVariationsRaw(e.target.value)}
+                                />
+                                <VariationStockManager product={product} variationsRaw={variationsRaw} />
                             </div>
 
                             {/* Dynamic Specifications */}

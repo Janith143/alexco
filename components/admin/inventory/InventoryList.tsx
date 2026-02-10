@@ -149,13 +149,7 @@ export default function InventoryList() {
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setAdjustProduct(p)}
-                                            >
-                                                <SlidersHorizontal className="h-4 w-4" />
-                                            </Button>
+
                                             <Button
                                                 variant="ghost"
                                                 size="sm"

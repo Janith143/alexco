@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { ChevronDown, Smartphone, Laptop, Tv, Speaker, Home, Watch, Gamepad2, Wifi, Cpu, Sun, Zap, Battery, Lightbulb } from "lucide-react";
 import {
@@ -62,9 +63,21 @@ export default function MegaMenu() {
                                                     className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-slate-100 to-slate-200 p-6 no-underline outline-none focus:shadow-md"
                                                     href={`/shop?category=${category.slug}`}
                                                 >
-                                                    <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center text-white mb-2">
-                                                        <Icon className="h-4 w-4" />
-                                                    </div>
+                                                    {category.image ? (
+                                                        <div className="relative h-12 w-12 rounded-md overflow-hidden mb-3 border border-slate-100">
+                                                            <Image
+                                                                src={category.image}
+                                                                alt={category.name}
+                                                                fill
+                                                                className="object-cover"
+                                                                sizes="48px"
+                                                            />
+                                                        </div>
+                                                    ) : (
+                                                        <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center text-white mb-2">
+                                                            <Icon className="h-4 w-4" />
+                                                        </div>
+                                                    )}
                                                     <div className="mb-2 mt-2 text-lg font-medium text-slate-900">
                                                         {category.name}
                                                     </div>
