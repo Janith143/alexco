@@ -2,6 +2,7 @@
 
 import { query } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
+import { getCategoryPath, getCategorySlug } from "./categories";
 
 export type InventoryConflict = {
     productId: string;
@@ -142,6 +143,9 @@ export async function createProduct(data: any) {
     const galleryArray = Array.isArray(gallery) ? gallery : [];
     const mainImage = galleryArray.length > 0 ? galleryArray[0] : null;
 
+    // Get category slug
+    const categorySlug = await getCategorySlug(category);
+
     try {
         // 1. Create Product
         await query(`
@@ -151,7 +155,7 @@ export async function createProduct(data: any) {
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, 'VAT_18', ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
-            productId, sku, name, category, price,
+            productId, sku, name, categorySlug || category, price,
             price_cost || 0,
             price_sale || 0,
             description || '',
@@ -335,6 +339,9 @@ export async function updateProduct(id: string, data: any) {
     const galleryArray = Array.isArray(gallery) ? gallery : [];
     const mainImage = galleryArray.length > 0 ? galleryArray[0] : null;
 
+    // Get category slug
+    const categorySlug = await getCategorySlug(category);
+
     try {
         // Fetch current product to find removed images
         const [oldProduct] = await query(`SELECT image, gallery FROM products WHERE id = ?`, [id]) as any[];
@@ -346,7 +353,7 @@ export async function updateProduct(id: string, data: any) {
                 specifications = ?, whats_included = ?, features = ?, gallery = ?, image = ?
             WHERE id = ?
         `, [
-            sku, name, category, price,
+            sku, name, categorySlug || category, price,
             price_cost || 0,
             price_sale || 0,
             description || '',

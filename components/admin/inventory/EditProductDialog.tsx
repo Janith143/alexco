@@ -25,6 +25,19 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [categories, setCategories] = useState<{ id: string, name: string, slug: string, parent_id: string | null }[]>([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (product && categories.length > 0) {
+            // Find category by slug (since product.category_path stores the slug/path)
+            const found = categories.find(c => c.slug === product.category_path);
+            if (found) {
+                setSelectedCategoryId(found.id);
+            } else {
+                setSelectedCategoryId(undefined);
+            }
+        }
+    }, [product, categories]);
 
     useEffect(() => {
         if (open) {
@@ -238,13 +251,13 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
                             </div>
                             <div className="grid gap-2">
                                 <label className="text-sm font-medium">Category *</label>
-                                <Select name="category" required defaultValue={product.category_path}>
+                                <Select name="category" required value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map((cat) => (
-                                            <SelectItem key={cat.id} value={cat.slug || cat.name}>
+                                            <SelectItem key={cat.id} value={cat.id}>
                                                 {cat.parent_id ? `— ${cat.name}` : cat.name}
                                             </SelectItem>
                                         ))}

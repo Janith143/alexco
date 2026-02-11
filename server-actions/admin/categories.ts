@@ -21,27 +21,34 @@ export type Category = {
 
 export async function getCategories(includeInactive = false): Promise<Category[]> {
     try {
-        let sql = `
-            SELECT c.*, 
-            (SELECT COUNT(*) FROM products p WHERE p.category_path LIKE CONCAT('%', c.slug, '%')) as product_count 
-            FROM categories c
-        `;
-
+        // 1. Fetch Categories
+        let sql = `SELECT * FROM categories c`;
         if (!includeInactive) {
             sql += ` WHERE c.is_active = TRUE`;
         }
-
         sql += ` ORDER BY c.order_index ASC, c.name ASC`;
-
         const rows = await query(sql) as Category[];
 
-        // Build hierarchy
+        // 2. Fetch Product Counts (grouped by slug)
+        const countRows = await query(`
+            SELECT category_path, COUNT(*) as count 
+            FROM products 
+            GROUP BY category_path
+        `) as any[];
+
+        const productCountMap = new Map<string, number>();
+        countRows.forEach(r => {
+            if (r.category_path) productCountMap.set(r.category_path, Number(r.count));
+        });
+
+        // 3. Build hierarchy & Assign Counts
         const categoryMap = new Map<string, Category>();
         const rootCategories: Category[] = [];
 
-        // First pass: map all categories
+        // First pass: map categories and assign direct product count
         rows.forEach(cat => {
             cat.children = [];
+            cat.product_count = productCountMap.get(cat.slug) || 0;
             categoryMap.set(cat.id, cat);
         });
 
@@ -54,10 +61,57 @@ export async function getCategories(includeInactive = false): Promise<Category[]
             }
         });
 
+        // 4. Recursive Aggregation of Counts (Post-order traversal)
+        // We need to sum up children counts into parents
+        const aggregateCounts = (cat: Category): number => {
+            let total = cat.product_count || 0;
+            if (cat.children && cat.children.length > 0) {
+                cat.children.forEach(child => {
+                    total += aggregateCounts(child);
+                });
+            }
+            cat.product_count = total;
+            return total;
+        };
+
+        rootCategories.forEach(cat => aggregateCounts(cat));
+
         return rootCategories;
     } catch (e) {
         console.error("Get Categories Error:", e);
         return [];
+    }
+}
+
+export async function getCategoryPath(categoryId: string): Promise<string> {
+    try {
+        const rows = await query(`
+            WITH RECURSIVE category_path AS (
+                SELECT id, name, slug, parent_id, 1 as level
+                FROM categories
+                WHERE id = ?
+                UNION ALL
+                SELECT c.id, c.name, c.slug, c.parent_id, cp.level + 1
+                FROM categories c
+                JOIN category_path cp ON c.id = cp.parent_id
+            )
+            SELECT id, name, slug FROM category_path ORDER BY level DESC
+        `, [categoryId]) as any[];
+
+        return rows.map(r => r.slug).join('/');
+    } catch (e) {
+        console.error("Get Category Path Error:", e);
+        return "";
+    }
+}
+
+export async function getCategorySlug(categoryId: string): Promise<string> {
+    try {
+        const [row] = await query("SELECT slug FROM categories WHERE id = ?", [categoryId]) as any[];
+        return row ? row.slug : "";
+    } catch (e) {
+        console.error("Get Category Slug Error:", e);
+        return "";
     }
 }
 

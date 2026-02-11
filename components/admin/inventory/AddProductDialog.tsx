@@ -163,7 +163,7 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map((cat) => (
-                                            <SelectItem key={cat.id} value={cat.slug || cat.name}>
+                                            <SelectItem key={cat.id} value={cat.id}>
                                                 {cat.parent_id ? `— ${cat.name}` : cat.name}
                                             </SelectItem>
                                         ))}

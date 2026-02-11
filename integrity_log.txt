@@ -1,0 +1,16 @@
+Starting Integrity Check
+
+--- Category Slugs (HEX Check) ---
+'solar' -> HEX: 736f6c6172
+'solar-accessories' -> HEX: 736f6c61722d6163636573736f72696573
+'solar-panels' -> HEX: 736f6c61722d70616e656c73
+
+--- Product Category Paths (HEX Check - Sample) ---
+SKU: MC4-CONN | Path: '/solar-power/solar-accessories/' -> HEX: 2f736f6c61722d706f7765722f736f6c61722d6163636573736f726965732f | Strat: FIFO
+SKU: wew | Path: '/solar-power/' -> HEX: 2f736f6c61722d706f7765722f | Strat: FIFO
+SKU: SOL-PNL-450W | Path: 'solar-panels' -> HEX: 736f6c61722d70616e656c73 | Strat: FIFO
+SKU: CABLE-PV-4MM-B | Path: 'solar-accessories' -> HEX: 736f6c61722d6163636573736f72696573 | Strat: FIFO
+SKU: SOL-PNL-JA-545 | Path: 'solar-panels' -> HEX: 736f6c61722d70616e656c73 | Strat: FIFO
+
+--- Exact Match Test ---
+Products matching exact 'solar-panels': 4
