@@ -9,6 +9,7 @@ async function run() {
         console.log("Connected.");
 
         const q = async (sql: string, params: any[] = []) => {
+            if (!connection) throw new Error("No connection");
             const [rows] = await connection.execute(sql, params);
             return rows as any[];
         };

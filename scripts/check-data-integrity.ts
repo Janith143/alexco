@@ -3,7 +3,7 @@ import mysql from 'mysql2/promise';
 import fs from 'fs';
 
 async function run() {
-    let connection;
+    let connection: mysql.Connection | undefined;
     const logFile = 'integrity_log.txt';
     const log = (msg: string) => {
         console.error(msg);
@@ -15,6 +15,7 @@ async function run() {
     try {
         connection = await mysql.createConnection("mysql://root:Ican123ZXC@127.0.0.1:3306/alexco_db");
 
+        if (!connection) throw new Error("No connection");
         // 1. Check Categories for Whitespace/Hidden chars
         log("\n--- Category Slugs (HEX Check) ---");
         const [cats] = await connection.execute("SELECT slug FROM categories WHERE slug LIKE '%solar%'") as any[];

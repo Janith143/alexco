@@ -2,11 +2,12 @@
 import mysql from 'mysql2/promise';
 
 async function run() {
-    let connection;
+    let connection: mysql.Connection | undefined;
     try {
         console.error("Starting detailed audit...");
         connection = await mysql.createConnection("mysql://root:Ican123ZXC@127.0.0.1:3306/alexco_db");
 
+        if (!connection) throw new Error("No connection");
         // 1. Get all active categories
         const [allCats] = await connection.execute("SELECT id, name, slug, parent_id FROM categories WHERE is_active=1") as any[];
 

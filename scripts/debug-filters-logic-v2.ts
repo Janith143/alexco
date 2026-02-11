@@ -2,7 +2,7 @@
 import mysql from 'mysql2/promise';
 
 async function run() {
-    let connection;
+    let connection: mysql.Connection | undefined;
     try {
         console.error("Connecting...");
         connection = await mysql.createConnection("mysql://root:Ican123ZXC@127.0.0.1:3306/alexco_db");
@@ -10,6 +10,7 @@ async function run() {
         const category = 'solar'; // Test case
 
         // 1. Fetch active categories (EXACT QUERY from filters.ts)
+        if (!connection) throw new Error("No connection");
         const [allCats] = await connection.execute('SELECT id, parent_id, slug FROM categories WHERE is_active = TRUE') as any[];
         console.error(`Found ${allCats.length} active categories.`);
 
