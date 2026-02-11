@@ -2,7 +2,7 @@
 import mysql from 'mysql2/promise';
 
 async function run() {
-    let connection;
+    let connection: mysql.Connection | undefined;
     try {
         console.log("Connecting...");
         connection = await mysql.createConnection("mysql://root:Ican123ZXC@127.0.0.1:3306/alexco_db");

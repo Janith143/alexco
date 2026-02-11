@@ -2,12 +2,13 @@
 import mysql from 'mysql2/promise';
 
 async function listCategories() {
-    let connection;
+    let connection: mysql.Connection | undefined;
     try {
         console.error("DEBUG: STARTING LIST CATEGORIES");
 
         connection = await mysql.createConnection("mysql://root:Ican123ZXC@127.0.0.1:3306/alexco_db");
 
+        if (!connection) throw new Error("No connection");
         const [rows] = await connection.execute('SELECT slug, id, parent_id FROM categories') as any[];
 
         if (!rows || rows.length === 0) {

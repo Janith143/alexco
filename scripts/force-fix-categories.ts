@@ -2,10 +2,12 @@
 import mysql from 'mysql2/promise';
 
 async function run() {
-    let connection;
+    let connection: mysql.Connection | undefined;
     try {
         console.error("Connecting...");
         connection = await mysql.createConnection("mysql://root:Ican123ZXC@127.0.0.1:3306/alexco_db");
+
+        if (!connection) throw new Error("No connection");
 
         // 1. Force Fix 'Solar' Parent
         console.error("Fixing Solar Parent...");

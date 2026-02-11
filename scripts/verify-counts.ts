@@ -2,13 +2,14 @@
 import mysql from 'mysql2/promise';
 
 async function run() {
-    let connection;
+    let connection: mysql.Connection | undefined;
     try {
         console.error("Connecting...");
         connection = await mysql.createConnection("mysql://root:Ican123ZXC@127.0.0.1:3306/alexco_db");
 
         // 1. Get current implementation counts (Simulate getCategories SQL)
         console.error("\n--- Current SQL Implementation (LIKE %slug%) ---");
+        if (!connection) throw new Error("No connection");
         const [currentCounts] = await connection.execute(`
             SELECT c.name, c.slug, 
             (SELECT COUNT(*) FROM products p WHERE p.category_path LIKE CONCAT('%', c.slug, '%')) as count
