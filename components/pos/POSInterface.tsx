@@ -5,6 +5,8 @@ import ProductGrid from "./ProductGrid";
 import CheckoutDialog from "./CheckoutDialog";
 import OrderHistorySheet from "./OrderHistorySheet";
 import CartSidebar from "./CartSidebar";
+import POSReceipt from "./POSReceipt";
+import PrintPortal from "./PrintPortal";
 import { Trash2, Plus, Minus, ShoppingCart, Printer, History, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSalesOrder } from "@/server-actions/pos/orders";
@@ -24,6 +26,7 @@ export default function POSInterface() {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
     const [lastOrderNumber, setLastOrderNumber] = useState<string | null>(null);
+    const [printOrder, setPrintOrder] = useState<any>(null);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     const [isCartSheetOpen, setIsCartSheetOpen] = useState(false); // Mobile cart sheet state
     const { toast } = useToast();
@@ -72,42 +75,87 @@ export default function POSInterface() {
     const taxRate = 0; // Assuming inclusive for now, or 0 if separate
     const total = subtotal;
 
+    const handlePrint = (order: any) => {
+        setPrintOrder(order);
+        // Wait for render then print
+        setTimeout(() => {
+            window.print();
+        }, 500);
+    };
+
     const handleCheckoutComplete = async (method: string, tenderAmount?: number) => {
-        const orderData = {
-            items: cart.map(i => ({ productId: i.id, price: i.price, quantity: i.quantity })),
-            total: total,
-            paymentMethod: method
-        };
+        try {
+            const { v4: uuidv4 } = await import("uuid");
+            const { getDatabase, syncOrdersOutbox } = await import("@/lib/pos/SyncService");
 
-        const result = await createSalesOrder(orderData);
+            const orderId = uuidv4();
+            const timestamp = Date.now();
 
-        if (result.success) {
+            const orderDoc = {
+                id: orderId,
+                items: cart.map(i => ({ productId: i.id, quantity: i.quantity, price: i.price })),
+                total: total,
+                timestamp: timestamp,
+                synced: false
+            };
+
+            // 1. Save to Local DB
+            const db = await getDatabase();
+            await db.orders.insert(orderDoc);
+
+            // 2. Clear UI immediately (Optimistic)
             toast({
                 title: "Sale Completed",
-                description: `Order #${result.orderNumber} created successfully.`,
-                action: (
-                    <ToastAction onClick={() => window.open(`/paths/POS/print/${result.orderNumber}`, '_blank', 'width=400,height=600')}>
-                        Print Receipt
-                    </ToastAction>
-                ),
+                description: `Order saved locally. Printing...`,
             });
+
+            // Trigger Print with full details
+            const printDoc = {
+                ...orderDoc,
+                order_number: "PENDING-" + orderId.slice(0, 8),
+                items: cart.map(i => ({ ...i, line_total: i.price * i.quantity })),
+                created_at: timestamp,
+                payment_method: method
+            };
+            handlePrint(printDoc);
+
             setCart([]);
-            setLastOrderNumber(result.orderNumber || null);
+            setLastOrderNumber("PENDING-" + orderId.slice(0, 8)); // Valid order number comes after sync, but we need something temporarily
             setIsCheckoutOpen(false);
-            setIsCartSheetOpen(false); // Close mobile cart sheet on success
-        } else {
+            setIsCartSheetOpen(false);
+
+            // 3. Trigger Background Sync
+            syncOrdersOutbox().then(() => {
+                toast({
+                    title: "Synced",
+                    description: "Order pushed to server successfully.",
+                });
+            }).catch(err => {
+                console.error("Sync failed, will retry later:", err);
+                toast({
+                    title: "Offline Mode",
+                    description: "Order saved locally. Will sync when online.",
+                    variant: "default" // Not an error, just offline status
+                });
+            });
+
+        } catch (error) {
+            console.error(error);
             toast({
                 title: "Error",
-                description: "Failed to process sale. Please try again.",
+                description: "Failed to save order locally.",
                 variant: "destructive"
             });
         }
     };
 
     return (
-        <div className="flex h-screen bg-slate-100 overflow-hidden relative">
+        <div className="flex h-screen bg-slate-100 overflow-hidden relative print:h-auto print:overflow-visible print:bg-white">
+            <style jsx global>{`
+                /* Print styles are now handled globally in globals.css targeting #print-root */
+            `}</style>
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 h-full">
+            <div className="flex-1 flex flex-col min-w-0 h-full print:hidden">
                 <header className="bg-white border-b px-4 py-3 md:px-6 md:py-4 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-4">
                         <h1 className="text-lg md:text-xl font-bold text-slate-800">POS Terminal</h1>
@@ -116,7 +164,7 @@ export default function POSInterface() {
                                 variant="outline"
                                 size="sm"
                                 className="h-8 gap-2 bg-slate-100 border-slate-200 text-slate-600 hover:text-blue-600 hidden md:flex"
-                                onClick={() => window.open(`/paths/POS/print/${lastOrderNumber}`, '_blank', 'width=400,height=600')}
+                                onClick={() => printOrder ? handlePrint(printOrder) : window.open(`/paths/POS/print/${lastOrderNumber}`, '_blank')}
                             >
                                 <Printer className="h-4 w-4" /> Last Receipt
                             </Button>
@@ -193,7 +241,7 @@ export default function POSInterface() {
             </div>
 
             {/* Desktop Cart Sidebar (Hidden on mobile) */}
-            <div className="hidden lg:block w-[400px] h-full z-10">
+            <div className="hidden lg:block w-[400px] h-full z-10 print:hidden">
                 <CartSidebar
                     cart={cart}
                     onRemove={removeFromCart}
@@ -214,6 +262,13 @@ export default function POSInterface() {
                 open={isHistoryOpen}
                 onOpenChange={setIsHistoryOpen}
             />
+
+            {/* Hidden Print Area via Portal */}
+            {printOrder && (
+                <PrintPortal>
+                    <POSReceipt order={printOrder} />
+                </PrintPortal>
+            )}
         </div>
     );
 }

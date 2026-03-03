@@ -17,7 +17,7 @@ export async function getProducts(): Promise<ProductProps[]> {
         const rows = await query(`
       SELECT id, name, price_retail as price, category_path as category, specifications, sku, image, gallery
       FROM products
-      WHERE (inventory_strategy != 'DISCONTINUED' OR inventory_strategy IS NULL)
+      WHERE (inventory_strategy != 'DISCONTINUED' OR inventory_strategy IS NULL) AND is_active = TRUE
       ORDER BY created_at DESC
     `) as any[];
 

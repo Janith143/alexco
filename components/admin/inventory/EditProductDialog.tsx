@@ -11,6 +11,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { updateProduct } from "@/server-actions/admin/inventory";
 import ImageUpload from "@/components/admin/ImageUpload";
 
@@ -62,6 +63,8 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
     const [boxItems, setBoxItems] = useState<string[]>([]);
     const [features, setFeatures] = useState<string[]>([]);
     const [gallery, setGallery] = useState<string[]>([]);
+    const [videoUrl, setVideoUrl] = useState("");
+    const [isActive, setIsActive] = useState(true);
     const [variationsRaw, setVariationsRaw] = useState("");
 
     useEffect(() => {
@@ -91,24 +94,13 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
             } catch (e) { setFeatures([]); }
 
             // Parse Gallery
-            // Parse Gallery
             try {
-                console.log("EditProductDialog - Raw Product:", product);
-                console.log("EditProductDialog - Raw Gallery:", product.gallery, "Type:", typeof product.gallery);
-
                 let g = [];
                 if (typeof product.gallery === 'string') {
-                    try {
-                        g = JSON.parse(product.gallery);
-                    } catch (e) {
-                        console.error("Failed to parse gallery string:", e);
-                        g = [];
-                    }
+                    g = JSON.parse(product.gallery);
                 } else {
                     g = product.gallery || [];
                 }
-
-                console.log("EditProductDialog - Parsed Gallery:", g);
 
                 if (Array.isArray(g) && g.length > 0) {
                     setGallery(g);
@@ -121,6 +113,9 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
                 console.error("Error setting gallery:", e);
                 setGallery([]);
             }
+
+            setVideoUrl(product.video_url || "");
+            setIsActive(product.is_active !== undefined ? Boolean(product.is_active) : true);
         }
     }, [product]);
 
@@ -191,7 +186,9 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
             specifications: JSON.stringify(specsObj),
             whats_included: JSON.stringify(boxItems.filter(i => i.trim())),
             features: JSON.stringify(features.filter(f => f.trim())),
-            gallery: gallery
+            gallery: gallery,
+            videoUrl: videoUrl,
+            is_active: isActive
         };
 
         try {
@@ -228,13 +225,23 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
                         </div>
                     )}
 
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Product Images (First is Main)</label>
-                        <ImageUpload
-                            value={gallery}
-                            onChange={setGallery}
-                            onRemove={(url) => setGallery(gallery.filter(g => g !== url))}
-                        />
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Product Images (First is Main)</label>
+                            <ImageUpload
+                                value={gallery}
+                                onChange={setGallery}
+                                onRemove={(url) => setGallery(gallery.filter(g => g !== url))}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">YouTube Video URL (Optional)</label>
+                            <Input
+                                placeholder="e.g. https://www.youtube.com/watch?v=..."
+                                value={videoUrl}
+                                onChange={(e) => setVideoUrl(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
@@ -244,6 +251,10 @@ export default function EditProductDialog({ product, open, onOpenChange, onSucce
                             <div className="grid gap-2">
                                 <label className="text-sm font-medium">Product Name *</label>
                                 <Input name="name" required defaultValue={product.name} />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Switch checked={isActive} onCheckedChange={setIsActive} id="edit-is-active" />
+                                <label htmlFor="edit-is-active" className="text-sm font-medium">Active (Published)</label>
                             </div>
                             <div className="grid gap-2">
                                 <label className="text-sm font-medium">SKU (Unique) *</label>

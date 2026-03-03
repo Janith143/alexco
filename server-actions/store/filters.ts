@@ -18,7 +18,7 @@ export async function getFilterOptions() {
                 MIN(CAST(price_retail AS DECIMAL(10,2))) as min_price, 
                 MAX(CAST(price_retail AS DECIMAL(10,2))) as max_price
             FROM products
-            WHERE inventory_strategy != 'DISCONTINUED'
+            WHERE inventory_strategy != 'DISCONTINUED' AND is_active = TRUE
         `) as any[];
 
         return {
@@ -46,7 +46,7 @@ export async function getFilteredProducts(filters: {
     try {
         const { category, minPrice, maxPrice, search, sortBy = 'name', page = 1, limit = 16 } = filters;
 
-        const whereClauses = ["inventory_strategy != 'DISCONTINUED'"];
+        const whereClauses = ["inventory_strategy != 'DISCONTINUED'", "is_active = TRUE"];
         const params: any[] = [];
 
         if (category) {
@@ -149,8 +149,14 @@ export async function getFilteredProducts(filters: {
             page,
             totalPages: Math.ceil(total / limit)
         };
-    } catch (e) {
+    } catch (e: any) {
         console.error("Get Filtered Products Error:", e);
-        return { products: [], total: 0, page: 1, totalPages: 0 };
+        return {
+            products: [],
+            total: 0,
+            page: 1,
+            totalPages: 0,
+            error: e.message || "Unknown error occurred"
+        };
     }
 }

@@ -86,7 +86,8 @@ export async function getInventoryList(search?: string) {
         SELECT 
             p.id, p.sku, p.name, p.category_path, p.price_retail, p.price_cost, p.price_sale,
             p.weight_g, p.description, p.long_description, p.variations, p.image, p.gallery,
-            p.specifications, p.whats_included, p.features,
+            p.video_url,
+            p.specifications, p.whats_included, p.features, p.is_active,
             COALESCE(SUM(l.delta), 0) as current_stock
         FROM products p
         LEFT JOIN inventory_ledger l ON p.id = l.product_id
@@ -103,7 +104,10 @@ export async function getInventoryList(search?: string) {
 
     const rows = await query(sql, params) as any[];
     // verify stock count to be safe
-    rows.forEach(r => r.current_stock = Number(r.current_stock));
+    rows.forEach(r => {
+        r.current_stock = Number(r.current_stock);
+        r.is_active = Boolean(r.is_active);
+    });
 
     return rows;
 }
@@ -118,7 +122,7 @@ export async function createProduct(data: any) {
     const {
         name, sku, price, category, initialStock, description, long_description,
         variations_raw, price_cost, price_sale, weight_g,
-        specifications, whats_included, features, gallery
+        specifications, whats_included, features, gallery, videoUrl
     } = data;
     const { v4: uuidv4 } = await import('uuid');
 
@@ -151,9 +155,10 @@ export async function createProduct(data: any) {
         await query(`
             INSERT INTO products (
                 id, sku, name, category_path, price_retail, price_cost, price_sale, tax_code, 
-                description, long_description, variations, specifications, whats_included, features, gallery, image, weight_g
+                description, long_description, variations, specifications, whats_included, features, gallery, video_url, image, weight_g,
+                is_active
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'VAT_18', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'VAT_18', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `, [
             productId, sku, name, categorySlug || category, price,
             price_cost || 0,
@@ -165,8 +170,10 @@ export async function createProduct(data: any) {
             whats_included || JSON.stringify([]),
             features || JSON.stringify([]),
             JSON.stringify(galleryArray),
+            videoUrl || null,
             mainImage,
-            Number(weight_g) || 0
+            Number(weight_g) || 0,
+            data.is_active !== undefined ? data.is_active : true
         ]);
 
         // 2. Initial Stock (if > 0)
@@ -317,7 +324,7 @@ export async function updateProduct(id: string, data: any) {
     const {
         name, sku, price, category, description, long_description,
         variations_raw, price_cost, price_sale, weight_g,
-        specifications, whats_included, features, gallery
+        specifications, whats_included, features, gallery, videoUrl
     } = data;
 
     // Parse variations string "Color=Red,Blue; Size=S,M" -> { "Color": ["Red", "Blue"], "Size": ["S", "M"] }
@@ -350,7 +357,7 @@ export async function updateProduct(id: string, data: any) {
             UPDATE products SET
                 sku = ?, name = ?, category_path = ?, price_retail = ?, price_cost = ?, price_sale = ?, 
                 description = ?, long_description = ?, variations = ?, weight_g = ?,
-                specifications = ?, whats_included = ?, features = ?, gallery = ?, image = ?
+                specifications = ?, whats_included = ?, features = ?, gallery = ?, video_url = ?, image = ?, is_active = ?
             WHERE id = ?
         `, [
             sku, name, categorySlug || category, price,
@@ -364,7 +371,9 @@ export async function updateProduct(id: string, data: any) {
             whats_included || JSON.stringify([]),
             features || JSON.stringify([]),
             JSON.stringify(galleryArray),
+            videoUrl || null,
             mainImage,
+            data.is_active !== undefined ? data.is_active : true,
             id
         ]);
 
@@ -398,5 +407,21 @@ export async function updateProduct(id: string, data: any) {
             return { error: 'SKU already exists' };
         }
         return { error: 'Failed to update product' };
+    }
+}
+
+export async function toggleProductStatus(id: string, isActive: boolean) {
+    try {
+        await requirePermission('inventory.manage');
+        await query('UPDATE products SET is_active = ? WHERE id = ?', [isActive, id]);
+
+        const { revalidatePath } = await import('next/cache');
+        revalidatePath('/paths/admin/inventory');
+        revalidatePath('/shop');
+
+        return { success: true };
+    } catch (e: any) {
+        console.error("Toggle Status Error:", e);
+        return { success: false, error: e.message };
     }
 }

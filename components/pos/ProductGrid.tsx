@@ -29,12 +29,32 @@ export default function ProductGrid({ onAddToCart }: ProductGridProps) {
     useEffect(() => {
         async function load() {
             try {
-                const data = await getPosProducts();
-                setProducts(data);
+                // 1. Trigger Sync (fetch from server -> save to local DB)
+                // We don't await this strictly for the UI to show *something*, 
+                // but for first load we might want to wait a bit or just show local data immediately.
+                import("@/lib/pos/SyncService").then(({ syncProducts, getDatabase }) => {
+                    syncProducts().catch(err => console.error("Background sync failed:", err));
+
+                    // 2. Subscribe to Local DB
+                    getDatabase().then(db => {
+                        db.products.find().$.subscribe(docs => {
+                            const mapped = docs.map(d => ({
+                                id: d.id,
+                                name: d.name,
+                                price: d.price,
+                                category: d.category,
+                                sku: d.sku,
+                                stock: d.stock || 0
+                            }));
+                            setProducts(mapped);
+                            setLoading(false);
+                        });
+                    });
+                });
+
             } catch (e) {
                 console.error(e);
-            } finally {
-                setLoading(false);
+                setLoading(false); // Ensure loading stops even on error
             }
         }
         load();
@@ -93,8 +113,8 @@ export default function ProductGrid({ onAddToCart }: ProductGridProps) {
                                 onClick={() => product.stock > 0 && onAddToCart(product)}
                                 disabled={product.stock <= 0}
                                 className={`flex flex-col text-left bg-white p-3 rounded-xl border shadow-sm transition-all relative ${product.stock <= 0
-                                        ? 'border-slate-200 opacity-60 cursor-not-allowed'
-                                        : 'border-slate-200 hover:shadow-md hover:border-blue-300 active:scale-95'
+                                    ? 'border-slate-200 opacity-60 cursor-not-allowed'
+                                    : 'border-slate-200 hover:shadow-md hover:border-blue-300 active:scale-95'
                                     }`}
                             >
                                 {/* Stock Badge */}

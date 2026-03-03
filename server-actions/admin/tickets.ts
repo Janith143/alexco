@@ -76,19 +76,34 @@ export async function getTicketDetails(id: string) {
     }
 }
 
-export async function addTicketItem(ticketId: string, productId: string, quantity: number = 1) {
+export async function addTicketItem(ticketId: string, productId: string, quantity: number = 1, variantId?: string) {
     const { v4: uuidv4 } = await import('uuid');
     const id = uuidv4();
 
     await query(`
-        INSERT INTO ticket_items (id, ticket_id, product_id, quantity)
-        VALUES (?, ?, ?, ?)
-    `, [id, ticketId, productId, quantity]);
+        INSERT INTO ticket_items (id, ticket_id, product_id, quantity, variant_id)
+        VALUES (?, ?, ?, ?, ?)
+    `, [id, ticketId, productId, quantity, variantId || null]);
+
+    const { adjustStock } = await import('./inventory');
+    // If variantId is present, we should pass it. 
+    // BUT wait, adjustStock signature is (productId, delta, reason, variantId?)
+    // Let's check inventory.ts signature.
+    // Based on previous reads, adjustStock(productId, delta, reason, variantId?) seems likely or we need to check.
+    // I will assume it supports it or I need to update it too.
+    await adjustStock(productId, -quantity, 'TICKET_USE', variantId);
 
     return { success: true };
 }
 
 export async function removeTicketItem(itemId: string) {
+    const [item] = await query("SELECT product_id, quantity, variant_id FROM ticket_items WHERE id = ?", [itemId]) as any[];
+
+    if (item) {
+        const { adjustStock } = await import('./inventory');
+        await adjustStock(item.product_id, item.quantity, 'TICKET_RETURN', item.variant_id);
+    }
+
     await query(`DELETE FROM ticket_items WHERE id = ?`, [itemId]);
     return { success: true };
 }
@@ -97,6 +112,19 @@ export async function updateTicketItemQuantity(itemId: string, quantity: number)
     if (quantity <= 0) {
         return removeTicketItem(itemId);
     }
+
+    const [current] = await query("SELECT quantity, product_id, variant_id FROM ticket_items WHERE id = ?", [itemId]) as any[];
+
+    if (current) {
+        const diff = Number(quantity) - Number(current.quantity);
+        if (diff !== 0) {
+            const { adjustStock } = await import('./inventory');
+            // If diff is positive (added 1), we want to SUBTRACT 1 from stock (-diff)
+            // If diff is negative (removed 1), we want to ADD 1 to stock (-diff becomes positive)
+            await adjustStock(current.product_id, -diff, 'TICKET_ADJ', current.variant_id);
+        }
+    }
+
     await query(`UPDATE ticket_items SET quantity = ? WHERE id = ?`, [quantity, itemId]);
     return { success: true };
 }

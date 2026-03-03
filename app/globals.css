@@ -115,10 +115,55 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+@media print {
+
+  /* Hide everything deeply */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Reset page stats */
+  @page {
+    margin: 0;
+    size: 80mm auto;
+  }
+
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+    /* Collapse height to prevent blank space */
+    width: 0 !important;
+    overflow: hidden !important;
+    background: white !important;
+  }
+
+  #print-root,
+  #print-root * {
+    visibility: visible;
+  }
+
+  #print-root {
+    display: block !important;
+    position: absolute;
+    /* Absolute allows scrolling for long receipts */
+    top: 0;
+    left: 0;
+    width: 80mm;
+    height: auto !important;
+    margin: 0;
+    padding: 0;
+    background: white;
+    z-index: 99999;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

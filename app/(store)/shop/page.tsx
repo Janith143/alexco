@@ -22,6 +22,7 @@ function ShopContent() {
         priceRange: { min: 0, max: 100000 }
     });
     const [pagination, setPagination] = useState({ total: 0, page: 1, totalPages: 1 });
+    const [error, setError] = useState<string | null>(null);
 
     // Read filters from URL
     const category = searchParams.get("category") || undefined;
@@ -44,6 +45,7 @@ function ShopContent() {
     useEffect(() => {
         async function load() {
             setLoading(true);
+            setError(null);
             try {
                 const result = await getFilteredProducts({
                     category,
@@ -54,10 +56,16 @@ function ShopContent() {
                     page,
                     limit: 16
                 });
+
+                if (result.error) {
+                    setError(result.error);
+                }
+
                 setProducts(result.products);
                 setPagination({ total: result.total, page: result.page, totalPages: result.totalPages });
             } catch (e) {
                 console.error(e);
+                setError("Failed to load products");
             } finally {
                 setLoading(false);
             }
@@ -169,6 +177,15 @@ function ShopContent() {
                                 </Select>
                             </div>
                         </div>
+
+
+                        {/* Error Banner */}
+                        {error && (
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+                                <p className="font-bold">Error Loading Products:</p>
+                                <p>{error}</p>
+                            </div>
+                        )}
 
                         {/* Products Grid */}
                         {loading ? (

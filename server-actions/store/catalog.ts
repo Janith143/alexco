@@ -10,7 +10,7 @@ export async function searchProducts(term: string) {
     const rows = await query(`
         SELECT id, name, price_retail, price_sale, category_path, specifications, sku
         FROM products
-        WHERE name LIKE ? OR sku LIKE ? OR description LIKE ? OR category_path LIKE ?
+        WHERE (name LIKE ? OR sku LIKE ? OR description LIKE ? OR category_path LIKE ?) AND is_active = TRUE
         ORDER BY 
             CASE 
                 WHEN name LIKE ? THEN 1

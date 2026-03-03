@@ -11,6 +11,7 @@ export type ProductDoc = {
     price: number;
     category: string;
     sku: string;
+    stock: number;
 };
 
 export type OrderDoc = {
@@ -31,7 +32,8 @@ const productSchema: RxJsonSchema<ProductDoc> = {
         name: { type: 'string' },
         price: { type: 'number' },
         category: { type: 'string' },
-        sku: { type: 'string' }
+        sku: { type: 'string' },
+        stock: { type: 'number' }
     },
     required: ['id', 'name', 'price']
 };

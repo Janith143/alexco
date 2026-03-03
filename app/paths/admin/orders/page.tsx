@@ -21,10 +21,19 @@ export default function OnlineOrdersPage() {
     const [viewReceipt, setViewReceipt] = useState<string | null>(null);
     const { toast } = useToast();
 
+    const [couriers, setCouriers] = useState<any[]>([]);
+    const [shippingOrder, setShippingOrder] = useState<string | null>(null); // Order ID being shipped
+    const [selectedCourier, setSelectedCourier] = useState<string>("");
+    const [trackingNumber, setTrackingNumber] = useState("");
+
     async function loadData() {
         setLoading(true);
-        const data = await getOnlineOrders(statusFilter);
-        setOrders(data);
+        const [ordersData, couriersData] = await Promise.all([
+            getOnlineOrders(statusFilter),
+            import("@/server-actions/admin/couriers").then(mod => mod.getCouriers())
+        ]);
+        setOrders(ordersData);
+        setCouriers(couriersData);
         setLoading(false);
     }
 
@@ -33,16 +42,35 @@ export default function OnlineOrdersPage() {
     }, [statusFilter]);
 
     const handleStatusChange = async (orderId: string, newStatus: string) => {
-        const result = await updateOrderStatus(orderId, newStatus);
+        if (newStatus === "SHIPPED") {
+            setShippingOrder(orderId);
+            setTrackingNumber("");
+            setSelectedCourier("");
+            return;
+        }
+        await updateStatus(orderId, newStatus);
+    };
+
+    const updateStatus = async (orderId: string, status: string, courierId?: string, trackNo?: string) => {
+        const result = await updateOrderStatus(orderId, status, courierId, trackNo);
         if (result.success) {
             toast({ title: "Status Updated" });
             loadData();
             if (selectedOrder && selectedOrder.id === orderId) {
-                setSelectedOrder({ ...selectedOrder, delivery_status: newStatus });
+                setSelectedOrder({ ...selectedOrder, delivery_status: status });
             }
         } else {
             toast({ title: "Failed to update status", variant: "destructive" });
         }
+    };
+
+    const confirmShipping = async () => {
+        if (!shippingOrder) return;
+        if (!selectedCourier) return toast({ title: "Select a courier", variant: "destructive" });
+        if (!trackingNumber) return toast({ title: "Enter tracking number", variant: "destructive" });
+
+        await updateStatus(shippingOrder, "SHIPPED", selectedCourier, trackingNumber);
+        setShippingOrder(null);
     };
 
     return (
@@ -145,6 +173,24 @@ export default function OnlineOrdersPage() {
                                                 <SelectItem value="CANCELLED">Cancelled</SelectItem>
                                             </SelectContent>
                                         </Select>
+                                        {order.delivery_status === 'SHIPPED' && order.tracking_number && (
+                                            <div className="text-[10px] text-slate-500 mt-1">
+                                                {order.courier_name}: {
+                                                    order.tracking_url_template ? (
+                                                        <a
+                                                            href={order.tracking_url_template.replace('{tracking_number}', order.tracking_number)}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="text-blue-600 underline hover:text-blue-800"
+                                                        >
+                                                            {order.tracking_number}
+                                                        </a>
+                                                    ) : (
+                                                        <span>{order.tracking_number}</span>
+                                                    )
+                                                }
+                                            </div>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(order)}>
@@ -169,6 +215,42 @@ export default function OnlineOrdersPage() {
                             <img src={viewReceipt} alt="Receipt" className="max-w-full max-h-[600px] object-contain" />
                         )}
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Ship Order Dialog */}
+            <Dialog open={!!shippingOrder} onOpenChange={(open) => !open && setShippingOrder(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Ship Order</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Select Courier</label>
+                            <Select value={selectedCourier} onValueChange={setSelectedCourier}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select Courier" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {couriers.map(c => (
+                                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Tracking Number</label>
+                            <Input
+                                value={trackingNumber}
+                                onChange={(e) => setTrackingNumber(e.target.value)}
+                                placeholder="Enter tracking Number"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShippingOrder(null)}>Cancel</Button>
+                        <Button onClick={confirmShipping}>Confirm Shipment</Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
@@ -203,6 +285,19 @@ export default function OnlineOrdersPage() {
                                             <span>Order Date:</span>
                                             <span>{new Date(selectedOrder.created_at).toLocaleString()}</span>
                                         </div>
+                                        {selectedOrder.tracking_number && (
+                                            <div className="mt-2 pt-2 border-t">
+                                                <div className="font-semibold text-slate-700">Tracking Info</div>
+                                                <div className="flex justify-between">
+                                                    <span>Courier:</span>
+                                                    <span>{selectedOrder.courier_name}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span>Tracking #:</span>
+                                                    <span className="font-mono">{selectedOrder.tracking_number}</span>
+                                                </div>
+                                            </div>
+                                        )}
                                         {selectedOrder.payment_proof && (
                                             <div className="pt-2">
                                                 <a href={selectedOrder.payment_proof} target="_blank" className="text-blue-600 underline text-xs">View Uploaded Receipt</a>

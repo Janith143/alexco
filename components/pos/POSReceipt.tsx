@@ -3,24 +3,11 @@
 import { useEffect } from "react";
 
 export default function POSReceipt({ order }: { order: any }) {
-    useEffect(() => {
-        // Auto-print when loaded
-        if (typeof window !== 'undefined') {
-            setTimeout(() => {
-                window.print();
-            }, 500);
-        }
-    }, []);
+
 
     return (
-        <div className="bg-white w-[80mm] min-h-[100mm] p-4 text-black font-mono text-sm leading-tight shadow-md print:shadow-none print:w-full">
-            <style jsx global>{`
-                @media print {
-                    @page { margin: 0; size: 80mm auto; }
-                    body { background: white; }
-                    .no-print { display: none; }
-                }
-            `}</style>
+        <div className="bg-white w-[75mm] p-2 text-black font-mono text-xs leading-tight shadow-md print:shadow-none print:w-full">
+            {/* Styles are handled globally */}
 
             {/* Header */}
             <div className="text-center mb-4">

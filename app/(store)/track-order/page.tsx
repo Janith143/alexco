@@ -226,8 +226,27 @@ export default function TrackOrderPage() {
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-500">Courier:</span>
-                                        <span className="font-medium text-slate-900">Domex / Prompt</span>
+                                        <span className="font-medium text-slate-900">{result.order.courier_name || 'Generic Courier'}</span>
                                     </div>
+                                    {result.order.tracking_number && (
+                                        <div className="flex justify-between border-t pt-2 mt-2">
+                                            <span className="text-slate-500">Tracking #:</span>
+                                            <span className="font-mono font-bold text-slate-900">{result.order.tracking_number}</span>
+                                        </div>
+                                    )}
+
+                                    {result.order.tracking_url_template && result.order.tracking_number && (
+                                        <div className="mt-4 pt-2 border-t">
+                                            <Button
+                                                variant="outline"
+                                                className="w-full gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                onClick={() => window.open(result.order.tracking_url_template.replace('{tracking_number}', result.order.tracking_number), '_blank')}
+                                            >
+                                                <Truck className="w-4 h-4" />
+                                                Track on {result.order.courier_name || 'Courier Site'}
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

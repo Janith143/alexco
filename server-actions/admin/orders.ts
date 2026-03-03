@@ -5,18 +5,21 @@ import { query } from "@/lib/db";
 export async function getOnlineOrders(statusFilter: string = "ALL") {
     try {
         let sql = `
-            SELECT id, order_number, total_amount, payment_method, delivery_method, status, delivery_status, customer_name, customer_phone, customer_email, payment_proof, created_at, shipping_address
-            FROM sales_orders
-            WHERE order_source = 'ONLINE'
+            SELECT o.id, o.order_number, o.total_amount, o.payment_method, o.delivery_method, o.status, o.delivery_status, 
+                   o.customer_name, o.customer_phone, o.customer_email, o.payment_proof, o.created_at, o.shipping_address,
+                   o.courier_id, o.tracking_number, c.name as courier_name, c.tracking_url_template
+            FROM sales_orders o
+            LEFT JOIN couriers c ON o.courier_id = c.id
+            WHERE o.order_source = 'ONLINE'
         `;
         const params: any[] = [];
 
         if (statusFilter !== "ALL") {
-            sql += ` AND delivery_status = ?`;
+            sql += ` AND o.delivery_status = ?`;
             params.push(statusFilter);
         }
 
-        sql += ` ORDER BY created_at DESC`;
+        sql += ` ORDER BY o.created_at DESC`;
 
         const orders = await query(sql, params) as any[];
 
@@ -39,13 +42,25 @@ export async function getOnlineOrders(statusFilter: string = "ALL") {
     }
 }
 
-export async function updateOrderStatus(orderId: string, status: string) {
+export async function updateOrderStatus(orderId: string, status: string, courierId?: string, trackingNumber?: string) {
     try {
-        await query(`
-            UPDATE sales_orders
-            SET delivery_status = ?
-            WHERE id = ?
-        `, [status, orderId]);
+        // Build the update query dynamically or just update all if provided
+        let sql = `UPDATE sales_orders SET delivery_status = ?`;
+        const params: any[] = [status];
+
+        if (courierId !== undefined) {
+            sql += `, courier_id = ?`;
+            params.push(courierId || null);
+        }
+        if (trackingNumber !== undefined) {
+            sql += `, tracking_number = ?`;
+            params.push(trackingNumber || null);
+        }
+
+        sql += ` WHERE id = ?`;
+        params.push(orderId);
+
+        await query(sql, params);
 
         const { revalidatePath } = await import('next/cache');
         revalidatePath('/paths/admin/orders');

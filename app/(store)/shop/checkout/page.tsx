@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2, Truck, Store, Trash2, Plus, Minus } from "lucide-react";
 import { createOnlineOrder } from "@/server-actions/shop/checkout";
 import { calculateDeliveryCost } from "@/server-actions/store/checkout";
+import { generatePayHereHash } from "@/server-actions/payment/payhere";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -137,10 +138,83 @@ export default function CheckoutPage() {
         const result = await createOnlineOrder(submitData);
 
         if (result.success) {
-            setStep('success');
             setOrderId(result.orderNumber!);
-            clearCart();
-            toast({ title: "Order Placed Successfully!" });
+
+            if (paymentMethod === 'payhere') {
+                // Initiate PayHere Payment
+                try {
+                    const { hash, merchantId, amountFormatted } = await generatePayHereHash(result.orderNumber!, finalTotal, "LKR");
+
+                    const payment = {
+                        sandbox: process.env.NEXT_PUBLIC_PAYHERE_MODE === "sandbox",
+                        merchant_id: merchantId,
+                        return_url: `${window.location.origin}/shop/orders/${result.orderNumber}`,
+                        cancel_url: `${window.location.origin}/shop/checkout`,
+                        notify_url: `${process.env.NEXT_PUBLIC_BASE_URL}/api/payhere/notify`,
+                        order_id: result.orderNumber,
+                        items: items.map(i => i.name).join(", "),
+                        amount: amountFormatted, // Use formatted amount
+                        currency: "LKR",
+                        hash: hash,
+                        first_name: formData.name.split(" ")[0],
+                        last_name: formData.name.split(" ").slice(1).join(" ") || formData.name,
+                        email: formData.email,
+                        phone: formData.phone,
+                        address: formData.address,
+                        city: formData.city,
+                        country: "Sri Lanka",
+                        delivery_address: formData.address,
+                        delivery_city: formData.city,
+                        delivery_country: "Sri Lanka",
+                    };
+
+                    if ((window as any).payhere) {
+                        (window as any).payhere.startPayment(payment);
+
+                        (window as any).payhere.onCompleted = function onCompleted(orderId: string) {
+                            console.log("Payment completed. OrderID:" + orderId);
+                            setStep('success');
+                            clearCart();
+                            toast({ title: "Payment Successful!" });
+                        };
+
+                        (window as any).payhere.onDismissed = function onDismissed() {
+                            // Order is created but payment dismissed.
+                            console.log("Payment dismissed");
+                            toast({
+                                title: "Payment Cancelled",
+                                description: "You cancelled the payment process. The order has been created but not paid.",
+                                variant: "destructive"
+                            });
+                            // Do NOT set success or clear cart, so user can try again or choose another method.
+                            // Ideally we might want to let them pay for the EXISTING orderId, but simpler logic for now:
+                            // They remain on checkout. If they click Place Order again, it might create a duplicate pending order.
+                            // To prevent duplicate order creation if they retry immediately:
+                            // We could store orderId and check if it exists? 
+                            // For now, just preventing the "Success" screen is the critical fix.
+                        };
+
+                        (window as any).payhere.onError = function onError(error: any) {
+                            console.log("Error:" + error);
+                            toast({
+                                title: "Payment Error",
+                                description: "An error occurred during payment initiation. Please check your configuration.",
+                                variant: "destructive"
+                            });
+                        };
+                    } else {
+                        alert("PayHere SDK not loaded.");
+                    }
+
+                } catch (e) {
+                    console.error("PayHere Init Error:", e);
+                    toast({ title: "Failed to initiate payment", variant: "destructive" });
+                }
+            } else {
+                setStep('success');
+                clearCart();
+                toast({ title: "Order Placed Successfully!" });
+            }
         } else {
             toast({
                 title: "Order Failed",
@@ -309,6 +383,17 @@ export default function CheckoutPage() {
                                             </div>
                                         </div>
                                     )}
+                                </div>
+
+                                {/* PayHere */}
+                                <div className="border p-4 rounded-md">
+                                    <div className="flex items-center space-x-3">
+                                        <RadioGroupItem value="payhere" id="payhere" />
+                                        <Label htmlFor="payhere" className="font-semibold cursor-pointer">PayHere (Online Payment)</Label>
+                                    </div>
+                                    <div className="ml-7 text-sm text-muted-foreground">
+                                        Visa, MasterCard, eZ Cash, Frimi, etc.
+                                    </div>
                                 </div>
                             </RadioGroup>
                         </CardContent>

@@ -67,6 +67,7 @@ async function getProduct(id: string) {
             variations,
             warranty_period: row.warranty_period,
             warranty_policy: row.warranty_policy,
+            video_url: row.video_url,
             images // Pass array of images
         };
     } catch (error) {
@@ -120,7 +121,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <div className="container mx-auto px-4 py-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12">
                 {/* Gallery Section */}
-                <ProductGallery images={product.images} name={product.name} />
+                <ProductGallery images={product.images} videoUrl={product.video_url} name={product.name} />
 
                 {/* Basic Info Section */}
                 <div className="space-y-6">

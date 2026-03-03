@@ -9,6 +9,7 @@ import {
 import {
     Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { createProduct } from "@/server-actions/admin/inventory";
 import ImageUpload from "@/components/admin/ImageUpload";
 
@@ -46,6 +47,8 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
     const [boxItems, setBoxItems] = useState<string[]>([]);
     const [features, setFeatures] = useState<string[]>([]);
     const [gallery, setGallery] = useState<string[]>([]);
+    const [videoUrl, setVideoUrl] = useState("");
+    const [isActive, setIsActive] = useState(true);
 
     const addSpec = () => setSpecs([...specs, { key: "", value: "" }]);
     const removeSpec = (index: number) => setSpecs(specs.filter((_, i) => i !== index));
@@ -99,7 +102,9 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
             specifications: JSON.stringify(specsObj),
             whats_included: JSON.stringify(boxItems.filter(i => i.trim())),
             features: JSON.stringify(features.filter(f => f.trim())),
-            gallery: gallery
+            gallery: gallery,
+            videoUrl: videoUrl,
+            is_active: isActive
         };
 
         try {
@@ -134,13 +139,23 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
                         </div>
                     )}
 
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <label className="block text-sm font-medium text-slate-700 mb-2">Product Images (First is Main)</label>
-                        <ImageUpload
-                            value={gallery}
-                            onChange={setGallery}
-                            onRemove={(url) => setGallery(gallery.filter(g => g !== url))}
-                        />
+                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Product Images (First is Main)</label>
+                            <ImageUpload
+                                value={gallery}
+                                onChange={setGallery}
+                                onRemove={(url) => setGallery(gallery.filter(g => g !== url))}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-2">YouTube Video URL (Optional)</label>
+                            <Input
+                                placeholder="e.g. https://www.youtube.com/watch?v=..."
+                                value={videoUrl}
+                                onChange={(e) => setVideoUrl(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
@@ -150,6 +165,10 @@ export default function AddProductDialog({ open, onOpenChange, onSuccess }: AddP
                             <div className="grid gap-2">
                                 <label className="text-sm font-medium">Product Name *</label>
                                 <Input name="name" required placeholder="e.g. 5kW Inverter" />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Switch checked={isActive} onCheckedChange={setIsActive} id="is-active" />
+                                <label htmlFor="is-active" className="text-sm font-medium">Active (Published)</label>
                             </div>
                             <div className="grid gap-2">
                                 <label className="text-sm font-medium">SKU (Unique) *</label>

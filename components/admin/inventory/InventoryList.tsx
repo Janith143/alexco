@@ -6,9 +6,11 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Plus, SlidersHorizontal, Trash2, Pencil } from "lucide-react";
-import { getInventoryList, deleteProduct } from "@/server-actions/admin/inventory";
+import { Switch } from "@/components/ui/switch";
+import { Search, Plus, SlidersHorizontal, Trash2, Pencil, Upload } from "lucide-react";
+import { getInventoryList, deleteProduct, toggleProductStatus } from "@/server-actions/admin/inventory";
 import AddProductDialog from "./AddProductDialog";
+import ImportProductDialog from "./ImportProductDialog";
 import EditProductDialog from "./EditProductDialog";
 import StockAdjustmentDialog from "./StockAdjustmentDialog";
 import {
@@ -28,6 +30,7 @@ export default function InventoryList() {
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [showAddDialog, setShowAddDialog] = useState(false);
+    const [showImportDialog, setShowImportDialog] = useState(false);
     const [adjustProduct, setAdjustProduct] = useState<any | null>(null);
     const [editProduct, setEditProduct] = useState<any | null>(null);
     const [deleteProductInfo, setDeleteProductInfo] = useState<any | null>(null);
@@ -48,6 +51,7 @@ export default function InventoryList() {
     const handleSuccess = () => {
         loadData();
         setShowAddDialog(false);
+        setShowImportDialog(false);
         setAdjustProduct(null);
         setEditProduct(null);
     };
@@ -73,6 +77,23 @@ export default function InventoryList() {
         setDeleteProductInfo(null);
     };
 
+    const handleToggleStatus = async (id: string, currentStatus: boolean) => {
+        // Optimistic update
+        setProducts(products.map(p => p.id === id ? { ...p, is_active: !currentStatus } : p));
+
+        const result = await toggleProductStatus(id, !currentStatus);
+
+        if (!result.success) {
+            // Revert on failure
+            setProducts(products.map(p => p.id === id ? { ...p, is_active: currentStatus } : p));
+            toast({
+                title: "Update failed",
+                description: result.error,
+                variant: "destructive"
+            });
+        }
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4 justify-between">
@@ -85,6 +106,9 @@ export default function InventoryList() {
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
+                <Button variant="outline" onClick={() => setShowImportDialog(true)}>
+                    <Upload className="h-4 w-4 mr-2" /> Import CSV
+                </Button>
                 <Button onClick={() => setShowAddDialog(true)}>
                     <Plus className="h-4 w-4 mr-2" /> Add Product
                 </Button>
@@ -100,6 +124,7 @@ export default function InventoryList() {
                             <TableHead className="text-right">Retail</TableHead>
                             <TableHead className="text-right">Cost</TableHead>
                             <TableHead className="text-right">Sale</TableHead>
+                            <TableHead className="text-right">Status</TableHead>
                             <TableHead className="text-right">Stock</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -131,6 +156,12 @@ export default function InventoryList() {
                                     </TableCell>
                                     <TableCell className="text-right text-green-600 font-medium">
                                         {p.price_sale > 0 ? Number(p.price_sale).toLocaleString() : '-'}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <Switch
+                                            checked={p.is_active}
+                                            onCheckedChange={() => handleToggleStatus(p.id, p.is_active)}
+                                        />
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium 
@@ -170,6 +201,12 @@ export default function InventoryList() {
             <AddProductDialog
                 open={showAddDialog}
                 onOpenChange={setShowAddDialog}
+                onSuccess={handleSuccess}
+            />
+
+            <ImportProductDialog
+                open={showImportDialog}
+                onOpenChange={setShowImportDialog}
                 onSuccess={handleSuccess}
             />
 
