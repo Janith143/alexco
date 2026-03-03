@@ -7,9 +7,9 @@
   },
   "main": "server.js",
   "scripts": {
-    "dev": "next dev -p 3003",
+    "dev": "next dev",
     "build": "next build",
-    "start": "next start -p $PORT",
+    "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
