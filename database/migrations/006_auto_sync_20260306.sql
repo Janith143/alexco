@@ -129,9 +129,7 @@ CREATE TABLE IF NOT EXISTS certifications (
     issue_date DATE NOT NULL,
     expiry_date DATE,
     document_path VARCHAR(500),
-    -- is_expired should be checked at query time: expiry_date < CURDATE()
     notes TEXT,
-    FOREIGN KEY (employee_id) REFERENCES employees(id),
     INDEX idx_employee (employee_id),
     INDEX idx_expiry (expiry_date)
 );
@@ -145,7 +143,5 @@ CREATE TABLE IF NOT EXISTS onboarding_progress (
     completed_at TIMESTAMP NULL,
     completed_by CHAR(36),
     notes TEXT,
-    FOREIGN KEY (employee_id) REFERENCES employees(id),
-    FOREIGN KEY (task_id) REFERENCES onboarding_tasks(id),
     UNIQUE KEY unique_progress (employee_id, task_id)
 );

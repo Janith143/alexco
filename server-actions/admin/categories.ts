@@ -117,7 +117,9 @@ export async function getCategorySlug(categoryId: string): Promise<string> {
 
 export async function createCategory(name: string, parentId?: string, image?: string) {
     try {
-        await requirePermission('categories.manage');
+        const user = await requirePermission('categories.manage');
+        console.log(`User ${user.username} (ID: ${user.id}) is creating category: ${name}`);
+
         const { v4: uuidv4 } = await import('uuid');
         const id = uuidv4();
 
@@ -132,11 +134,18 @@ export async function createCategory(name: string, parentId?: string, image?: st
         revalidatePath('/paths/admin/categories');
         return { success: true, id };
     } catch (e: any) {
-        console.error("Create Category Error:", e);
+        console.error("Create Category Error Detail:", e);
+
+        // Return more specific error for debugging
+        if (e.message.includes("Forbidden") || e.message.includes("Unauthorized")) {
+            return { error: `Permission Denied: ${e.message}` };
+        }
+
         if (e.code === 'ER_DUP_ENTRY') {
             return { error: 'Slug already exists. Please use a unique slug.' };
         }
-        return { error: 'Failed to create category' };
+
+        return { error: `Failed to create category: ${e.message || 'Unknown error'}` };
     }
 }
 

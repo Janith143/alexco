@@ -99,12 +99,15 @@ export async function getFilteredProducts(filters: {
 
         const whereSQL = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
+        console.log(`Filter Request: category=${category}, sortBy=${sortBy}, search=${search}`);
+        console.log(`Generated WHERE: ${whereSQL}`);
+
         // Sorting
         let orderBy = 'name ASC';
         switch (sortBy) {
             case 'price_asc': orderBy = 'CAST(price_retail AS DECIMAL(10,2)) ASC'; break;
             case 'price_desc': orderBy = 'CAST(price_retail AS DECIMAL(10,2)) DESC'; break;
-            case 'newest': orderBy = 'created_at DESC'; break;
+            case 'newest': orderBy = 'p.created_at DESC'; break;
             case 'name': default: orderBy = 'name ASC';
         }
 

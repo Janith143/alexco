@@ -72,11 +72,34 @@ export type MyDatabase = RxDatabase<MyDatabaseCollections>;
 
 let dbPromise: Promise<MyDatabase> | null = null;
 
+/**
+ * Fallback hash function for non-secure contexts (HTTP)
+ * where crypto.subtle is unavailable.
+ */
+async function fallbackHashFunction(input: string): Promise<string> {
+    if (typeof crypto !== 'undefined' && crypto.subtle) {
+        const data = new TextEncoder().encode(input);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+    // Simple DJB2-based hash as fallback
+    let hash1 = 5381;
+    let hash2 = 52711;
+    for (let i = 0; i < input.length; i++) {
+        const char = input.charCodeAt(i);
+        hash1 = (hash1 * 33) ^ char;
+        hash2 = (hash2 * 33) ^ char;
+    }
+    return (hash1 >>> 0).toString(16).padStart(8, '0') + (hash2 >>> 0).toString(16).padStart(8, '0');
+}
+
 const _createDatabase = async (): Promise<MyDatabase> => {
     console.log("Database creating...");
     const db = await createRxDatabase<MyDatabaseCollections>({
         name: 'alexcoposdb',
-        storage: getRxStorageDexie()
+        storage: getRxStorageDexie(),
+        hashFunction: fallbackHashFunction
     });
 
     await db.addCollections({
